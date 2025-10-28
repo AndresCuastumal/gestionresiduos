@@ -1,0 +1,237 @@
+[26-Sep-2025 00:50:00 Europe/Berlin] === INICIANDO ENVIO DE NOTIFICACIONES ===
+[26-Sep-2025 00:50:00 Europe/Berlin] Generador: 36, Año: 2024
+[26-Sep-2025 00:50:00 Europe/Berlin] Verificando archivos:
+[26-Sep-2025 00:50:00 Europe/Berlin]  - certificado_pdf_controller.php: EXISTE
+[26-Sep-2025 00:50:00 Europe/Berlin]  - email_controller.php: EXISTE
+[26-Sep-2025 00:50:00 Europe/Berlin] Estados para notificación: Array
+(
+    [formulario_mensual] => aprobado
+    [formulario_accidentes] => aprobado
+    [formulario_contingencias] => aprobado
+    [estado_general] => aprobado
+)
+
+[26-Sep-2025 00:50:00 Europe/Berlin] Observaciones: SÍ
+[26-Sep-2025 00:50:00 Europe/Berlin] ✅ TODOS APROBADOS - Generando certificado...
+[26-Sep-2025 00:50:00 Europe/Berlin] PHP Warning:  file_put_contents(../../procesos/uploads/certificados/certificado_aprobacion_36_2024.pdf): Failed to open stream: No such file or directory in C:\xampp\htdocs\reportegestionresiduos\procesos\admin\certificado_pdf_controller.php on line 43
+[26-Sep-2025 00:50:00 Europe/Berlin] PDF generado: certificado_aprobacion_36_2024.pdf
+[26-Sep-2025 00:50:00 Europe/Berlin] Ruta PDF: ../../procesos/uploads/certificados/certificado_aprobacion_36_2024.pdf
+[26-Sep-2025 00:50:00 Europe/Berlin] ❌ ERROR: El PDF no se creó correctamente
+[26-Sep-2025 00:50:00 Europe/Berlin] ❌ ERROR en generación de certificado: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'g.usuario_id' in 'on clause'
+[26-Sep-2025 00:50:00 Europe/Berlin] === FINALIZANDO ENVIO DE NOTIFICACIONES ===
+[26-Sep-2025 00:53:09 Europe/Berlin] === INICIANDO ENVIO DE NOTIFICACIONES ===
+[26-Sep-2025 00:53:09 Europe/Berlin] Generador: 36, Año: 2024
+[26-Sep-2025 00:53:09 Europe/Berlin] Verificando archivos:
+[26-Sep-2025 00:53:09 Europe/Berlin]  - certificado_pdf_controller.php: EXISTE
+[26-Sep-2025 00:53:09 Europe/Berlin]  - email_controller.php: EXISTE
+[26-Sep-2025 00:53:09 Europe/Berlin] Estados para notificación: Array
+(
+    [formulario_mensual] => aprobado
+    [formulario_accidentes] => aprobado
+    [formulario_contingencias] => aprobado
+    [estado_general] => aprobado
+)
+
+[26-Sep-2025 00:53:09 Europe/Berlin] Observaciones: SÍ
+[26-Sep-2025 00:53:09 Europe/Berlin] ✅ TODOS APROBADOS - Generando certificado...
+[26-Sep-2025 00:53:09 Europe/Berlin] PDF generado: certificado_aprobacion_36_2024.pdf
+[26-Sep-2025 00:53:09 Europe/Berlin] Ruta PDF: ../../procesos/uploads/certificados/certificado_aprobacion_36_2024.pdf
+[26-Sep-2025 00:53:09 Europe/Berlin] ❌ ERROR: El PDF no se creó correctamente
+[26-Sep-2025 00:53:09 Europe/Berlin] ❌ ERROR en generación de certificado: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'g.usuario_id' in 'on clause'
+[26-Sep-2025 00:53:09 Europe/Berlin] === FINALIZANDO ENVIO DE NOTIFICACIONES ===
+[26-Sep-2025 00:55:59 Europe/Berlin] === INICIANDO ENVIO DE NOTIFICACIONES ===
+[26-Sep-2025 00:55:59 Europe/Berlin] Generador: 36, Año: 2024
+[26-Sep-2025 00:55:59 Europe/Berlin] Verificando archivos:
+[26-Sep-2025 00:55:59 Europe/Berlin]  - certificado_pdf_controller.php: EXISTE
+[26-Sep-2025 00:55:59 Europe/Berlin]  - email_controller.php: EXISTE
+[26-Sep-2025 00:55:59 Europe/Berlin] Estados para notificación: Array
+(
+    [formulario_mensual] => aprobado
+    [formulario_accidentes] => aprobado
+    [formulario_contingencias] => aprobado
+    [estado_general] => aprobado
+)
+
+[26-Sep-2025 00:55:59 Europe/Berlin] Observaciones: SÍ
+[26-Sep-2025 00:55:59 Europe/Berlin] ✅ TODOS APROBADOS - Generando certificado...
+[26-Sep-2025 00:55:59 Europe/Berlin] PDF generado: certificado_aprobacion_36_2024.pdf
+[26-Sep-2025 00:55:59 Europe/Berlin] Ruta PDF: ../../procesos/uploads/certificados/certificado_aprobacion_36_2024.pdf
+[26-Sep-2025 00:55:59 Europe/Berlin] ❌ ERROR: El PDF no se creó correctamente
+[26-Sep-2025 00:55:59 Europe/Berlin] ❌ ERROR en generación de certificado: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'g.usuario_id' in 'on clause'
+[26-Sep-2025 00:55:59 Europe/Berlin] === FINALIZANDO ENVIO DE NOTIFICACIONES ===
+[26-Sep-2025 00:59:13 Europe/Berlin] === INICIANDO ENVIO DE NOTIFICACIONES ===
+[26-Sep-2025 00:59:13 Europe/Berlin] Generador: 36, Año: 2024
+[26-Sep-2025 00:59:13 Europe/Berlin] Verificando archivos:
+[26-Sep-2025 00:59:13 Europe/Berlin]  - certificado_pdf_controller.php: EXISTE
+[26-Sep-2025 00:59:13 Europe/Berlin]  - email_controller.php: EXISTE
+[26-Sep-2025 00:59:13 Europe/Berlin] Estados para notificación: Array
+(
+    [formulario_mensual] => aprobado
+    [formulario_accidentes] => aprobado
+    [formulario_contingencias] => aprobado
+    [estado_general] => aprobado
+)
+
+[26-Sep-2025 00:59:13 Europe/Berlin] Observaciones: SÍ
+[26-Sep-2025 00:59:13 Europe/Berlin] ✅ TODOS APROBADOS - Generando certificado...
+[26-Sep-2025 00:59:13 Europe/Berlin] PDF generado: certificado_aprobacion_36_2024.pdf
+[26-Sep-2025 00:59:13 Europe/Berlin] Ruta PDF: ../../procesos/uploads/certificados/certificado_aprobacion_36_2024.pdf
+[26-Sep-2025 00:59:13 Europe/Berlin] ❌ ERROR: El PDF no se creó correctamente
+[26-Sep-2025 00:59:13 Europe/Berlin] PHP Warning:  Undefined array key "nombre_usuario" in C:\xampp\htdocs\reportegestionresiduos\procesos\admin\email_controller.php on line 38
+[26-Sep-2025 00:59:13 Europe/Berlin] PHP Warning:  file_put_contents(../../procesos/logs/email_log.txt): Failed to open stream: No such file or directory in C:\xampp\htdocs\reportegestionresiduos\procesos\admin\email_controller.php on line 111
+[26-Sep-2025 00:59:13 Europe/Berlin] Email enviado: ✅ SÍ
+[26-Sep-2025 00:59:13 Europe/Berlin] Intentando marcar como finalizado: generador_id=36, anio=2024
+[26-Sep-2025 00:59:13 Europe/Berlin] Resultado update: true
+[26-Sep-2025 00:59:13 Europe/Berlin] Filas afectadas: 1
+[26-Sep-2025 00:59:13 Europe/Berlin] Marcado como finalizado: ✅ SÍ
+[26-Sep-2025 00:59:13 Europe/Berlin] === FINALIZANDO ENVIO DE NOTIFICACIONES ===
+[26-Sep-2025 00:59:56 Europe/Berlin] === INICIANDO ENVIO DE NOTIFICACIONES ===
+[26-Sep-2025 00:59:56 Europe/Berlin] Generador: 36, Año: 2024
+[26-Sep-2025 00:59:56 Europe/Berlin] Verificando archivos:
+[26-Sep-2025 00:59:56 Europe/Berlin]  - certificado_pdf_controller.php: EXISTE
+[26-Sep-2025 00:59:56 Europe/Berlin]  - email_controller.php: EXISTE
+[26-Sep-2025 00:59:56 Europe/Berlin] Estados para notificación: Array
+(
+    [formulario_mensual] => aprobado
+    [formulario_accidentes] => aprobado
+    [formulario_contingencias] => aprobado
+    [estado_general] => aprobado
+)
+
+[26-Sep-2025 00:59:56 Europe/Berlin] Observaciones: SÍ
+[26-Sep-2025 00:59:56 Europe/Berlin] ✅ TODOS APROBADOS - Generando certificado...
+[26-Sep-2025 00:59:56 Europe/Berlin] PDF generado: certificado_aprobacion_36_2024.pdf
+[26-Sep-2025 00:59:56 Europe/Berlin] Ruta PDF: ../../procesos/uploads/certificados/certificado_aprobacion_36_2024.pdf
+[26-Sep-2025 00:59:56 Europe/Berlin] ❌ ERROR: El PDF no se creó correctamente
+[26-Sep-2025 00:59:56 Europe/Berlin] PHP Warning:  file_put_contents(../../procesos/logs/email_log.txt): Failed to open stream: No such file or directory in C:\xampp\htdocs\reportegestionresiduos\procesos\admin\email_controller.php on line 111
+[26-Sep-2025 00:59:56 Europe/Berlin] Email enviado: ✅ SÍ
+[26-Sep-2025 00:59:56 Europe/Berlin] Intentando marcar como finalizado: generador_id=36, anio=2024
+[26-Sep-2025 00:59:56 Europe/Berlin] Resultado update: true
+[26-Sep-2025 00:59:56 Europe/Berlin] Filas afectadas: 1
+[26-Sep-2025 00:59:56 Europe/Berlin] Marcado como finalizado: ✅ SÍ
+[26-Sep-2025 00:59:56 Europe/Berlin] === FINALIZANDO ENVIO DE NOTIFICACIONES ===
+[26-Sep-2025 01:02:19 Europe/Berlin] === INICIANDO ENVIO DE NOTIFICACIONES ===
+[26-Sep-2025 01:02:19 Europe/Berlin] Generador: 36, Año: 2024
+[26-Sep-2025 01:02:19 Europe/Berlin] Verificando archivos:
+[26-Sep-2025 01:02:19 Europe/Berlin]  - certificado_pdf_controller.php: EXISTE
+[26-Sep-2025 01:02:19 Europe/Berlin]  - email_controller.php: EXISTE
+[26-Sep-2025 01:02:19 Europe/Berlin] Estados para notificación: Array
+(
+    [formulario_mensual] => aprobado
+    [formulario_accidentes] => aprobado
+    [formulario_contingencias] => aprobado
+    [estado_general] => aprobado
+)
+
+[26-Sep-2025 01:02:19 Europe/Berlin] Observaciones: SÍ
+[26-Sep-2025 01:02:19 Europe/Berlin] ✅ TODOS APROBADOS - Generando certificado...
+[26-Sep-2025 01:02:19 Europe/Berlin] PDF generado: certificado_aprobacion_36_2024.pdf
+[26-Sep-2025 01:02:19 Europe/Berlin] Ruta PDF: ../../procesos/uploads/certificados/certificado_aprobacion_36_2024.pdf
+[26-Sep-2025 01:02:19 Europe/Berlin] ❌ ERROR: El PDF no se creó correctamente
+[26-Sep-2025 01:02:19 Europe/Berlin] PHP Warning:  file_put_contents(../../procesos/uploads/logs/email_log.txt): Failed to open stream: No such file or directory in C:\xampp\htdocs\reportegestionresiduos\procesos\admin\email_controller.php on line 111
+[26-Sep-2025 01:02:19 Europe/Berlin] Email enviado: ✅ SÍ
+[26-Sep-2025 01:02:19 Europe/Berlin] Intentando marcar como finalizado: generador_id=36, anio=2024
+[26-Sep-2025 01:02:19 Europe/Berlin] Resultado update: true
+[26-Sep-2025 01:02:19 Europe/Berlin] Filas afectadas: 1
+[26-Sep-2025 01:02:19 Europe/Berlin] Marcado como finalizado: ✅ SÍ
+[26-Sep-2025 01:02:19 Europe/Berlin] === FINALIZANDO ENVIO DE NOTIFICACIONES ===
+[26-Sep-2025 01:02:51 Europe/Berlin] === INICIANDO ENVIO DE NOTIFICACIONES ===
+[26-Sep-2025 01:02:51 Europe/Berlin] Generador: 36, Año: 2024
+[26-Sep-2025 01:02:51 Europe/Berlin] Verificando archivos:
+[26-Sep-2025 01:02:51 Europe/Berlin]  - certificado_pdf_controller.php: EXISTE
+[26-Sep-2025 01:02:51 Europe/Berlin]  - email_controller.php: EXISTE
+[26-Sep-2025 01:02:51 Europe/Berlin] Estados para notificación: Array
+(
+    [formulario_mensual] => aprobado
+    [formulario_accidentes] => aprobado
+    [formulario_contingencias] => aprobado
+    [estado_general] => aprobado
+)
+
+[26-Sep-2025 01:02:51 Europe/Berlin] Observaciones: SÍ
+[26-Sep-2025 01:02:51 Europe/Berlin] ✅ TODOS APROBADOS - Generando certificado...
+[26-Sep-2025 01:02:51 Europe/Berlin] PDF generado: certificado_aprobacion_36_2024.pdf
+[26-Sep-2025 01:02:51 Europe/Berlin] Ruta PDF: ../../procesos/uploads/certificados/certificado_aprobacion_36_2024.pdf
+[26-Sep-2025 01:02:51 Europe/Berlin] ❌ ERROR: El PDF no se creó correctamente
+[26-Sep-2025 01:02:51 Europe/Berlin] PHP Warning:  file_put_contents(../../procesos/uploads/logs/email_log.txt): Failed to open stream: No such file or directory in C:\xampp\htdocs\reportegestionresiduos\procesos\admin\email_controller.php on line 111
+[26-Sep-2025 01:02:51 Europe/Berlin] Email enviado: ✅ SÍ
+[26-Sep-2025 01:02:51 Europe/Berlin] Intentando marcar como finalizado: generador_id=36, anio=2024
+[26-Sep-2025 01:02:51 Europe/Berlin] Resultado update: true
+[26-Sep-2025 01:02:51 Europe/Berlin] Filas afectadas: 1
+[26-Sep-2025 01:02:51 Europe/Berlin] Marcado como finalizado: ✅ SÍ
+[26-Sep-2025 01:02:51 Europe/Berlin] === FINALIZANDO ENVIO DE NOTIFICACIONES ===
+[26-Sep-2025 01:04:41 Europe/Berlin] === INICIANDO ENVIO DE NOTIFICACIONES ===
+[26-Sep-2025 01:04:41 Europe/Berlin] Generador: 36, Año: 2024
+[26-Sep-2025 01:04:41 Europe/Berlin] Verificando archivos:
+[26-Sep-2025 01:04:41 Europe/Berlin]  - certificado_pdf_controller.php: EXISTE
+[26-Sep-2025 01:04:41 Europe/Berlin]  - email_controller.php: EXISTE
+[26-Sep-2025 01:04:41 Europe/Berlin] Estados para notificación: Array
+(
+    [formulario_mensual] => aprobado
+    [formulario_accidentes] => aprobado
+    [formulario_contingencias] => aprobado
+    [estado_general] => aprobado
+)
+
+[26-Sep-2025 01:04:41 Europe/Berlin] Observaciones: SÍ
+[26-Sep-2025 01:04:41 Europe/Berlin] ✅ TODOS APROBADOS - Generando certificado...
+[26-Sep-2025 01:04:41 Europe/Berlin] PDF generado: certificado_aprobacion_36_2024.pdf
+[26-Sep-2025 01:04:41 Europe/Berlin] Ruta PDF: ../../procesos/uploads/certificados/certificado_aprobacion_36_2024.pdf
+[26-Sep-2025 01:04:41 Europe/Berlin] ❌ ERROR: El PDF no se creó correctamente
+[26-Sep-2025 01:04:41 Europe/Berlin] Email enviado: ✅ SÍ
+[26-Sep-2025 01:04:41 Europe/Berlin] Intentando marcar como finalizado: generador_id=36, anio=2024
+[26-Sep-2025 01:04:41 Europe/Berlin] Resultado update: true
+[26-Sep-2025 01:04:41 Europe/Berlin] Filas afectadas: 1
+[26-Sep-2025 01:04:41 Europe/Berlin] Marcado como finalizado: ✅ SÍ
+[26-Sep-2025 01:04:41 Europe/Berlin] === FINALIZANDO ENVIO DE NOTIFICACIONES ===
+[26-Sep-2025 19:01:01 Europe/Berlin] === INICIANDO ENVIO DE NOTIFICACIONES ===
+[26-Sep-2025 19:01:01 Europe/Berlin] Generador: 36, Año: 2024
+[26-Sep-2025 19:01:01 Europe/Berlin] Verificando archivos:
+[26-Sep-2025 19:01:01 Europe/Berlin]  - certificado_pdf_controller.php: EXISTE
+[26-Sep-2025 19:01:01 Europe/Berlin]  - email_controller.php: EXISTE
+[26-Sep-2025 19:01:01 Europe/Berlin] Estados para notificación: Array
+(
+    [formulario_mensual] => aprobado
+    [formulario_accidentes] => aprobado
+    [formulario_contingencias] => aprobado
+    [estado_general] => aprobado
+)
+
+[26-Sep-2025 19:01:01 Europe/Berlin] Observaciones: SÍ
+[26-Sep-2025 19:01:01 Europe/Berlin] ✅ TODOS APROBADOS - Generando certificado...
+[26-Sep-2025 19:01:01 Europe/Berlin] Generando certificado PDF real para generador_id: 36, año: 2024
+[26-Sep-2025 19:01:01 Europe/Berlin] Directorio creado: ../../procesos/uploads/certificados/
+[26-Sep-2025 19:01:01 Europe/Berlin] ✅ Certificado PDF generado exitosamente: ../../procesos/uploads/certificados/certificado_aprobacion_36_2024.pdf (32349 bytes)
+[26-Sep-2025 19:01:01 Europe/Berlin] PDF generado: certificado_aprobacion_36_2024.pdf
+[26-Sep-2025 19:01:01 Europe/Berlin] Ruta PDF: ../../procesos/uploads/certificados/certificado_aprobacion_36_2024.pdf
+[26-Sep-2025 19:01:01 Europe/Berlin] Email enviado: ✅ SÍ
+[26-Sep-2025 19:01:01 Europe/Berlin] Intentando marcar como finalizado: generador_id=36, anio=2024
+[26-Sep-2025 19:01:01 Europe/Berlin] Resultado update: true
+[26-Sep-2025 19:01:01 Europe/Berlin] Filas afectadas: 1
+[26-Sep-2025 19:01:01 Europe/Berlin] Marcado como finalizado: ✅ SÍ
+[26-Sep-2025 19:01:01 Europe/Berlin] === FINALIZANDO ENVIO DE NOTIFICACIONES ===
+[26-Sep-2025 21:19:35 Europe/Berlin] === INICIANDO ENVIO DE NOTIFICACIONES ===
+[26-Sep-2025 21:19:35 Europe/Berlin] Generador: 41, Año: 2024
+[26-Sep-2025 21:19:35 Europe/Berlin] Verificando archivos:
+[26-Sep-2025 21:19:35 Europe/Berlin]  - certificado_pdf_controller.php: EXISTE
+[26-Sep-2025 21:19:35 Europe/Berlin]  - email_controller.php: EXISTE
+[26-Sep-2025 21:19:35 Europe/Berlin] Estados para notificación: Array
+(
+    [formulario_mensual] => aprobado
+    [formulario_accidentes] => aprobado
+    [formulario_contingencias] => aprobado
+    [estado_general] => aprobado
+)
+
+[26-Sep-2025 21:19:35 Europe/Berlin] Observaciones: NO
+[26-Sep-2025 21:19:35 Europe/Berlin] ✅ TODOS APROBADOS - Generando certificado...
+[26-Sep-2025 21:19:35 Europe/Berlin] Generando certificado PDF real para generador_id: 41, año: 2024
+[26-Sep-2025 21:19:35 Europe/Berlin] ✅ Certificado PDF generado exitosamente: ../../procesos/uploads/certificados/certificado_aprobacion_41_2024.pdf (32939 bytes)
+[26-Sep-2025 21:19:35 Europe/Berlin] PDF generado: certificado_aprobacion_41_2024.pdf
+[26-Sep-2025 21:19:35 Europe/Berlin] Ruta PDF: ../../procesos/uploads/certificados/certificado_aprobacion_41_2024.pdf
+[26-Sep-2025 21:19:35 Europe/Berlin] Email enviado: ✅ SÍ
+[26-Sep-2025 21:19:35 Europe/Berlin] Intentando marcar como finalizado: generador_id=41, anio=2024
+[26-Sep-2025 21:19:35 Europe/Berlin] Resultado update: true
+[26-Sep-2025 21:19:35 Europe/Berlin] Filas afectadas: 1
+[26-Sep-2025 21:19:35 Europe/Berlin] Marcado como finalizado: ✅ SÍ
+[26-Sep-2025 21:19:35 Europe/Berlin] === FINALIZANDO ENVIO DE NOTIFICACIONES ===

@@ -1,0 +1,335 @@
+/* ===== ESTILOS SIMPLIFICADOS PARA ESTADOS ===== */
+.badge-estado {
+    font-size: 0.75em;
+    padding: 0.5em 0.8em;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+}
+
+.badge-estado-pendiente { 
+    background-color: #fff8e1;
+    color: #f57c00 !important;
+    border-color: #ffe0b2;
+}
+
+.badge-estado-aprobado { 
+    background-color: #e8f5e9;
+    color: #2e7d32 !important;
+    border-color: #c8e6c9;
+}
+
+.badge-estado-rechazado { 
+    background-color: #ffebee;
+    color: #c62828 !important;
+    border-color: #ffcdd2;
+}
+
+.badge-estado-sin-datos { 
+    background-color: #e9ecef;
+    color: #6c757d !important;
+    border-color: #dee2e6;
+}
+/* ===== ESTILOS PARA BOTONES ===== */
+.btn-outline {
+    border: 1px solid #dee2e6;
+    background-color: white;
+    color: #6c757d;
+    transition: all 0.2s ease;
+}
+
+.btn-outline:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-outline-primary:hover {
+    color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-outline-secondary:hover {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-outline-success:hover {
+    color: #198754;
+    border-color: #198754;
+}
+
+.btn-outline-danger:hover {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-outline-warning:hover {
+    color: #fd7e14;
+    border-color: #fd7e14;
+}
+
+.btn-outline-info:hover {
+    color: #0dcaf0;
+    border-color: #0dcaf0;
+}
+
+/* ===== ESTILOS PARA TARJETAS DE INFORMACIÓN ===== */
+.info-card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background-color: #fff;
+}
+
+.info-card h6 {
+    color: #6c757d;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+/* ===== ESTILOS PARA TABLAS ===== */
+.table-hover tbody tr:hover {
+    background-color: rgba(248, 244, 206, 0.3);
+}
+
+/* ===== ESTILOS PARA TABLA DE MESES EN 2 COLUMNAS ===== */
+.meses-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.mes-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    background-color: #fff;
+}
+
+.mes-nombre {
+    font-weight: 500;
+    min-width: 100px;
+}
+
+.mes-cantidad {
+    width: 100px;
+}
+
+/* ===== ESTILOS RESPONSIVOS ===== */
+@media (max-width: 576px) {
+    .meses-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .mes-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .mes-cantidad {
+        width: 100%;
+    }
+}
+
+/* ===== ESTILOS PARA FORMULARIOS ===== */
+.form-control:focus {
+    border-color: #4a6ad1;
+    box-shadow: 0 0 0 0.2rem rgba(74, 106, 209, 0.25);
+}
+
+/* ===== ESTILOS PARA BADGES DE CATEGORÍAS ===== */
+.badge-categoria {
+    font-size: 0.8em;
+    padding: 0.5em 0.75em;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+}
+
+.badge-micro { 
+    background-color: #f8f9fa;
+    color: #6c757d !important;
+    border-color: #dee2e6;
+}
+
+.badge-pequeno-generador { 
+    background-color: #e9f5ef;
+    color: #198754 !important;
+    border-color: #b8dfce;
+}
+
+.badge-mediano-generador { 
+    background-color: #fff3e8;
+    color: #fd7e14 !important;
+    border-color: #fcd1b0;
+}
+
+.badge-gran-generador { 
+    background-color: #fbe9ea;
+    color: #dc3545 !important;
+    border-color: #f2b8bb;
+}
+
+/* ===== ESTILOS PARA BOTONES DE ACCIÓN ===== */
+.btn-action {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    background-color: white;
+    color: #6c757d;
+    transition: all 0.2s ease;
+}
+
+.btn-action:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-reportar:hover {
+    color: #198754;
+    border-color: #198754;
+}
+
+.btn-editar:hover {
+    color: #fd7e14;
+    border-color: #fd7e14;
+}
+
+.btn-eliminar:hover {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+/* ===== ESTILOS PARA BOTONES DE FORMULARIOS ===== */
+.btn-formulario {
+    font-size: 0.85em;
+    padding: 0.5em 0.8em;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    border: 1px solid #dee2e6;
+    background-color: white;
+    color: #6c757d;
+    text-align: left;
+    margin-bottom: 0.5em;
+    transition: all 0.2s ease;
+    display: block;
+    width: 100%;
+}
+
+.btn-formulario:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-formulario-mensual:hover {
+    color: #198754;
+    border-color: #198754;
+}
+
+.btn-formulario-accidentes:hover {
+    color: #0dcaf0;
+    border-color: #0dcaf0;
+}
+
+.btn-formulario-contingencias:hover {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.badge-estado-sin-datos { 
+    background-color: #e9ecef;
+    color: #6c757d !important;
+    border-color: #dee2e6;
+}
+
+/* En tu archivo CSS */
+.btn-action.disabled {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+.btn-action.disabled:hover {
+    background-color: transparent !important;
+    transform: none !important;
+}
+
+
+.mes-cantidad:read-only {
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    color: #6c757d;
+}
+
+.bg-light[readonly] {
+    background-color: #f8f9fa !important;
+}
+
+/* Estilos para el grid de meses */
+.meses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.mes-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.mes-nombre {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    color: #495057;
+}
+
+.form-control:read-only, .form-select:disabled {
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    color: #6c757d;
+}
+
+.bg-light[readonly] {
+    background-color: #f8f9fa !important;
+}
+
+.form-check-input:disabled {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+.form-control:read-only, .form-select:disabled {
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    color: #6c757d;
+}
+
+.bg-light[readonly] {
+    background-color: #f8f9fa !important;
+}
+
+.form-check-input:disabled {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+/* Estilos para campos deshabilitados visualmente */
+.form-control.bg-light, .form-select.bg-light {
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    color: #6c757d;
+}

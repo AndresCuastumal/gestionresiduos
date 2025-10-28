@@ -1,0 +1,105 @@
+[2025-09-26 01:04:41] Email para: sistemas@saludpasto.gov.co
+Asunto: Certificado de Aprobación - Reporte Anual 2024
+Mensaje: 
+        <html>
+        <head>
+            <title>Certificado de Aprobación</title>
+        </head>
+        <body>
+            <h2>¡Felicitaciones!</h2>
+            <p>Estimado(a) Miguel Cuastumal,</p>
+            <p>El reporte anual 2024 para el generador <strong>Impreimagen</strong> ha sido <strong>APROBADO</strong>.</p>
+            <p>Se adjunta el certificado de aprobación correspondiente.</p>
+            <br>
+            <p><strong>Fecha de aprobación:</strong> 26/09/2025</p>
+            <br>
+            <p>Saludos cordiales,<br>Sistema de Gestión de Residuos</p>
+        </body>
+        </html>
+        
+Adjunto: ../../procesos/uploads/certificados/certificado_aprobacion_36_2024.pdf
+
+[2025-09-26 19:01:01] Email para: sistemas@saludpasto.gov.co
+Asunto: Certificado de Aprobación - Reporte Anual 2024
+Mensaje: 
+        <html>
+        <head>
+            <title>Certificado de Aprobación</title>
+        </head>
+        <body>
+            <h2>¡Felicitaciones!</h2>
+            <p>Estimado(a) Miguel Cuastumal,</p>
+            <p>El reporte anual 2024 para el generador <strong>Impreimagen</strong> ha sido <strong>APROBADO</strong>.</p>
+            <p>Se adjunta el certificado de aprobación correspondiente.</p>
+            <br>
+            <p><strong>Fecha de aprobación:</strong> 26/09/2025</p>
+            <br>
+            <p>Saludos cordiales,<br>Sistema de Gestión de Residuos</p>
+        </body>
+        </html>
+        
+Adjunto: ../../procesos/uploads/certificados/certificado_aprobacion_36_2024.pdf
+
+[2025-09-26 21:19:35] Email para: andrescuastumal@gmail.com
+Asunto: Certificado de Aprobación - Reporte Anual 2024
+Mensaje: 
+        <html>
+        <head>
+            <title>Certificado de Aprobación</title>
+        </head>
+        <body>
+            <h2>¡Felicitaciones!</h2>
+            <p>Estimado(a) Constaza Ponce,</p>
+            <p>El reporte anual 2024 para el generador <strong>prueba_18092025</strong> ha sido <strong>APROBADO</strong>.</p>
+            <p>Se adjunta el certificado de aprobación correspondiente.</p>
+            <br>
+            <p><strong>Fecha de aprobación:</strong> 26/09/2025</p>
+            <br>
+            <p>Saludos cordiales,<br>Sistema de Gestión de Residuos</p>
+        </body>
+        </html>
+        
+Adjunto: ../../procesos/uploads/certificados/certificado_aprobacion_41_2024.pdf
+
+[2025-09-26 22:08:25] Email para: andrescuastumal@gmail.com
+Asunto: Certificado de Aprobación - Reporte Anual 2024
+Mensaje: 
+        <html>
+        <head>
+            <title>Certificado de Aprobación</title>
+        </head>
+        <body>
+            <h2>¡Felicitaciones!</h2>
+            <p>Estimado(a) Constaza Ponce,</p>
+            <p>El reporte anual 2024 para el generador <strong>prueba_18092025</strong> ha sido <strong>APROBADO</strong>.</p>
+            <p>Se adjunta el certificado de aprobación correspondiente.</p>
+            <br>
+            <p><strong>Fecha de aprobación:</strong> 26/09/2025</p>
+            <br>
+            <p>Saludos cordiales,<br>Sistema de Gestión de Residuos</p>
+        </body>
+        </html>
+        
+Adjunto: ../../procesos/uploads/certificados/certificado_aprobacion_41_2024.pdf
+
+[2025-09-26 23:51:25] Email para: andrescuastumal@gmail.com
+Asunto: Certificado de Aprobación - Reporte Anual 2024
+Mensaje: 
+        <html>
+        <head>
+            <title>Certificado de Aprobación</title>
+        </head>
+        <body>
+            <h2>¡Felicitaciones!</h2>
+            <p>Estimado(a) Constaza Ponce,</p>
+            <p>El reporte anual 2024 para el generador <strong>prueba_18092025</strong> ha sido <strong>APROBADO</strong>.</p>
+            <p>Se adjunta el certificado de aprobación correspondiente.</p>
+            <br>
+            <p><strong>Fecha de aprobación:</strong> 26/09/2025</p>
+            <br>
+            <p>Saludos cordiales,<br>Sistema de Gestión de Residuos</p>
+        </body>
+        </html>
+        
+Adjunto: ../../procesos/uploads/certificados/certificado_aprobacion_41_2024.pdf
+
