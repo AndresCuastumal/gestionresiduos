@@ -235,3 +235,22 @@
 [26-Sep-2025 21:19:35 Europe/Berlin] Filas afectadas: 1
 [26-Sep-2025 21:19:35 Europe/Berlin] Marcado como finalizado: ✅ SÍ
 [26-Sep-2025 21:19:35 Europe/Berlin] === FINALIZANDO ENVIO DE NOTIFICACIONES ===
+[29-Oct-2025 00:18:47 Europe/Berlin] === INICIANDO ENVIO DE NOTIFICACIONES ===
+[29-Oct-2025 00:18:47 Europe/Berlin] Directorio actual: C:\xampp\htdocs\reportegestionresiduos\procesos\admin
+[29-Oct-2025 00:18:47 Europe/Berlin] Buscando archivos:
+[29-Oct-2025 00:18:47 Europe/Berlin]  - PDF: C:\xampp\htdocs\reportegestionresiduos\procesos\admin/certificado_pdf_controller.php
+[29-Oct-2025 00:18:47 Europe/Berlin]  - Email: C:\xampp\htdocs\reportegestionresiduos\procesos\admin/email_controller.php
+[29-Oct-2025 00:18:47 Europe/Berlin]  - ¿Existe PDF?: SÍ
+[29-Oct-2025 00:18:47 Europe/Berlin]  - ¿Existe Email?: SÍ
+[29-Oct-2025 00:18:47 Europe/Berlin] ✅ Cargando controladores...
+[29-Oct-2025 00:18:47 Europe/Berlin] Estados para notificación: Array
+(
+    [formulario_mensual] => sin_datos
+    [formulario_accidentes] => sin_datos
+    [formulario_contingencias] => sin_datos
+    [estado_general] => sin_datos
+)
+
+[29-Oct-2025 00:18:47 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type bool in C:\xampp\htdocs\reportegestionresiduos\procesos\admin\revisiones_controller.php on line 256
+[29-Oct-2025 00:18:47 Europe/Berlin] ❓ Estado no reconocido para notificación
+[29-Oct-2025 00:18:47 Europe/Berlin] === FINALIZANDO ENVIO DE NOTIFICACIONES ===

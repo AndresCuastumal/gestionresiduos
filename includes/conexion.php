@@ -1,7 +1,7 @@
 <?php
 $host = 'localhost';
 $dbname = 'bdresiduos';
-$username = 'root';
+$username = 'gestion_user';
 $password = 'estadistica2025*-';
 
 try {
