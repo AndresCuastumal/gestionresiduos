@@ -31,7 +31,7 @@ class GeneradorController {
     }
     public function obtenerGeneradorPorId($id) {
         try {
-            $stmt = $this->conn->prepare("SELECT * FROM GENERADOR WHERE id = ?");
+            $stmt = $this->conn->prepare("SELECT * FROM generador WHERE id = ?");
             $stmt->execute([$id]);
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -62,7 +62,7 @@ class GeneradorController {
     // Función para verificar si ya existe un generador con el mismo nombre y NIT
     private function existeGenerador($nom_generador, $nit, $excluir_id = null) {
         try {
-            $sql = "SELECT COUNT(*) as count FROM GENERADOR 
+            $sql = "SELECT COUNT(*) as count FROM generador 
                     WHERE nom_generador = ? AND nit = ?";
             
             $params = [$nom_generador, $nit];

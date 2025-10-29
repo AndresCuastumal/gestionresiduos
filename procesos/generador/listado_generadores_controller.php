@@ -23,7 +23,7 @@ class GeneradoresController {
         try {
             if ($_SESSION['usuario_rol'] === 'admin') {
                 // Admin ve todos los generadores
-                $stmt = $this->conn->query("SELECT * FROM GENERADOR ORDER BY nom_generador");
+                $stmt = $this->conn->query("SELECT * FROM generador ORDER BY nom_generador");
                 $this->generadores = $stmt->fetchAll(PDO::FETCH_ASSOC);
             } else {
                 // Usuario normal: usar la tabla de relación
