@@ -114,7 +114,7 @@ class GeneradorController {
                 }
                 
                 // Actualizar generador existente (agregar id_comuna)
-                $stmt = $this->conn->prepare("UPDATE GENERADOR SET
+                $stmt = $this->conn->prepare("UPDATE generador SET
                     periodo_reporte = ?, 
                     nom_generador = ?,
                     razon_social = ?,
@@ -153,7 +153,7 @@ class GeneradorController {
                 }
                 
                 // Crear nuevo generador (agregar id_comuna)
-                $stmt = $this->conn->prepare("INSERT INTO GENERADOR (
+                $stmt = $this->conn->prepare("INSERT INTO generador (
                     periodo_reporte, 
                     nom_generador, 
                     razon_social,
