@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($page_title) ? $page_title : 'Sistema de Autenticación'; ?></title>
+    <title><?php echo isset($page_title) ? $page_title : 'Reporte Gestión Residuos'; ?></title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/reportegestionresiduos/assets/css/estilos_simples.css" rel="stylesheet">
+    <link href="/assets/css/estilos_simples.css" rel="stylesheet">
     
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">    
@@ -24,7 +24,7 @@
                         <img src="/reportegestionresiduos/assets/css/logoNuevoSMS2024.png" alt="Logo SMS" 
                             class="me-3 img-fluid d-none d-md-block" 
                             style="max-height: 100px; width: auto;">
-                        <img src="../../assets/css/logoNuevoSMS2024.png" alt="Logo SMS" 
+                        <img src="/assets/css/logoNuevoSMS2024.png" alt="Logo SMS" 
                             class="me-2 img-fluid d-md-none" 
                             style="max-height: 40px; width: auto;">
                         <h1 class="h3 mb-0 text-center">Sistema de Reporte de Gestión de Residuos Generados en Atención en Salud y Otras Actividades</h1>
