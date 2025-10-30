@@ -10,7 +10,7 @@
         </footer>
 
         <!-- Scripts globales -->
-        <script src="/reportegestionresiduos/assets/js/main.js"></script>
+        <script src="../../assets/js/main.js"></script>
         
         <!-- Script específico para la página -->
         <?php if (isset($page_script)): ?>

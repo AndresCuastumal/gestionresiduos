@@ -7,7 +7,7 @@
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="../../assets/css/estilos_simples.css" rel="stylesheet">
+    <link href="/gestionresiduos/assets/css/estilos_simples.css" rel="stylesheet">
     
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">    
@@ -21,7 +21,7 @@
             <div style="background-color: #eed296ff;" class="p-4">
                 <div class="d-flex flex-column flex-md-row align-items-center justify-content-between mb-4">
                     <div class="d-flex align-items-center mb-3 mb-md-0">
-                        <img src="../../assets/css/logoNuevoSMS2024.png" alt="Logo SMS" 
+                        <img src="/gestionresiduos/assets/css/logoNuevoSMS2024.png" alt="Logo SMS" 
                             class="me-3 img-fluid d-none d-md-block" 
                             style="max-height: 100px; width: auto;">
                         <img src="../../assets/css/logoNuevoSMS2024.png" alt="Logo SMS" 
