@@ -14,7 +14,7 @@
         
         <!-- Script específico para la página -->
         <?php if (isset($page_script)): ?>
-            <script src="/reportegestionresiduos/assets/js/<?php echo $page_script; ?>"></script>
+            <script src="/gestionresiduos/assets/js/<?php echo $page_script; ?>"></script>
         <?php endif; ?>
     </body>
 </html>
