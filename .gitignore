@@ -1,0 +1,4 @@
+# Log files
+*.log
+debug.log
+/procesos/admin/debug.log
