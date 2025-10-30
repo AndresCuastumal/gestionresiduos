@@ -24,7 +24,7 @@
                         <img src="../../assets/css/logoNuevoSMS2024.png" alt="Logo SMS" 
                             class="me-3 img-fluid d-none d-md-block" 
                             style="max-height: 100px; width: auto;">
-                        <img src="/assets/css/logoNuevoSMS2024.png" alt="Logo SMS" 
+                        <img src="../../assets/css/logoNuevoSMS2024.png" alt="Logo SMS" 
                             class="me-2 img-fluid d-md-none" 
                             style="max-height: 40px; width: auto;">
                         <h1 class="h3 mb-0 text-center">Sistema de Reporte de Gestión de Residuos Generados en Atención en Salud y Otras Actividades</h1>
