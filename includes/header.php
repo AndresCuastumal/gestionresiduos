@@ -21,7 +21,7 @@
             <div style="background-color: #eed296ff;" class="p-4">
                 <div class="d-flex flex-column flex-md-row align-items-center justify-content-between mb-4">
                     <div class="d-flex align-items-center mb-3 mb-md-0">
-                        <img src="/reportegestionresiduos/assets/css/logoNuevoSMS2024.png" alt="Logo SMS" 
+                        <img src="/assets/css/logoNuevoSMS2024.png" alt="Logo SMS" 
                             class="me-3 img-fluid d-none d-md-block" 
                             style="max-height: 100px; width: auto;">
                         <img src="/assets/css/logoNuevoSMS2024.png" alt="Logo SMS" 
