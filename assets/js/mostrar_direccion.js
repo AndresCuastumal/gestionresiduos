@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const campos = [
         'tipo_via', 'numero_via', 'letras_adicionales', 'orientacion',
         'numero_cuadra', 'tipo_complemento', 'numero_complemento', 'complemento',
-        'barrio', 'ciudad', 'departamento'
+        'barrio'
     ];
 
     // Función para generar la vista previa
