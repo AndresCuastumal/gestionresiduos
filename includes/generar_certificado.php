@@ -1,5 +1,5 @@
 <?php
-require_once '../../vendor/autoload.php'; // Para TCPDF o similar
+require __DIR__ . '/../vendor/autoload.php'; // Para TCPDF o similar
 
 function generarCertificado($generador_id, $anio, $nombre_usuario, $nombre_generador) {
     // Crear directorio si no existe

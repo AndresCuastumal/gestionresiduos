@@ -34,7 +34,7 @@
                         <span class="navbar-text me-3 d-none d-md-inline">
                             <?php echo $_SESSION['usuario_email']; ?>
                         </span>
-                        <a href="../logout.php" class="btn btn-sm btn-outline-secondary">
+                        <a href="/gestionresiduos/logout.php" class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-door-open me-1"></i> Cerrar Sesión
                         </a>
                     </div>
