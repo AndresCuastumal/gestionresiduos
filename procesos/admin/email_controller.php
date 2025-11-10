@@ -21,7 +21,7 @@ class EmailController {
             $mail->Host = 'smtp.gmail.com';
             $mail->SMTPAuth = true;
             $mail->Username = 'reportegestionresiduos@gmail.com';
-            $mail->Password = 'inpz hpqw pdyq gdmq'; // Contraseña de aplicación
+            $mail->Password = 'oylh srwx wgpb hyuw'; // Contraseña de aplicación
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = 587;
             

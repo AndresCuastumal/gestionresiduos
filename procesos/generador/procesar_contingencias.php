@@ -305,8 +305,10 @@ try {
         }
         
     } catch (Exception $e) {
-        // Revertir transacción en caso de error
-        $conn->rollBack();
+        // Revertir transacción en caso de error, solo si hay transacción activa
+        if ($conn->inTransaction()) {
+            $conn->rollBack();
+        }
         throw $e;
     }
     
