@@ -30,12 +30,6 @@ $generador = $mensualController->obtenerDatosGenerador($generador_id);
 $datosReporte = $accidentesController->obtenerDatosReporteAdicional($generador_id, $anio);
 $accionesPreventivas = $accidentesController->obtenerAccionesPreventivas($datosReporte);
 
-// Verificar si la revisión está finalizada
-if ($revisionController->estaFinalizado($generador_id, $anio)) {
-    $_SESSION['warning'] = "Esta revisión ya ha sido finalizada y no puede ser modificada.";
-    header("Location: listado_revisiones_view.php");
-    exit();
-}
 
 // VERIFICAR SI REALMENTE HAY DATOS - NUEVA LÓGICA
 $tieneDatos = $accidentesController->existeRegistro($generador_id, $anio);
@@ -161,7 +155,7 @@ include '../../includes/header.php';
                             <p><strong>Capacitaciones programadas:</strong> <?= $datosReporte['num_capacitaciones_programadas'] ?></p>
                             <?php if ($datosReporte['archivo_cronograma']): ?>
                             <p><strong>Cronograma:</strong> 
-                                <a href="../../procesos/uploads/soportes_anuales/<?= $datosReporte['archivo_cronograma'] ?>" 
+                                <a href="../../procesos/generador/soportes_generador/<?= $datosReporte['archivo_cronograma'] ?>" 
                                    target="_blank" class="btn btn-sm btn-outline btn-outline-primary">
                                     <i class="bi bi-download me-2"></i>Ver archivo
                                 </a>
@@ -173,7 +167,7 @@ include '../../includes/header.php';
                             <?php if ($datosReporte['archivo_soportes_capacitaciones']): ?>
                             <p><strong>Número de personas capacitadas:</strong> <?= $datosReporte['num_empleados_capacitados'] ?></p>
                             <p><strong>Soportes:</strong> 
-                                <a href="../../procesos/uploads/soportes_anuales/<?= $datosReporte['archivo_soportes_capacitaciones'] ?>" 
+                                <a href="../../procesos/generador/soportes_generador/<?= $datosReporte['archivo_soportes_capacitaciones'] ?>" 
                                    target="_blank" class="btn btn-sm btn-outline btn-outline-primary">
                                     <i class="bi bi-download me-2"></i>Ver archivos
                                 </a>
@@ -220,7 +214,7 @@ include '../../includes/header.php';
                             <p><strong>Número de auditorías:</strong> <?= $datosReporte['num_auditorias'] ?></p>
                             <?php if ($datosReporte['archivo_resultados_auditorias']): ?>
                             <p><strong>Resultados de auditorías:</strong> 
-                                <a href="../../procesos/uploads/soportes_anuales/<?= $datosReporte['archivo_resultados_auditorias'] ?>" 
+                                <a href="../../procesos/generador/soportes_generador/<?= $datosReporte['archivo_resultados_auditorias'] ?>" 
                                    target="_blank" class="btn btn-sm btn-outline btn-outline-primary">
                                     <i class="bi bi-download me-2"></i>Ver archivo
                                 </a>
@@ -230,7 +224,7 @@ include '../../includes/header.php';
                         <div class="col-md-6">
                             <?php if ($datosReporte['archivo_plan_mejoramiento']): ?>
                             <p><strong>Plan de mejoramiento:</strong> 
-                                <a href="../../procesos/uploads/soportes_anuales/<?= $datosReporte['archivo_plan_mejoramiento'] ?>" 
+                                <a href="../../procesos/generador/soportes_generador/<?= $datosReporte['archivo_plan_mejoramiento'] ?>" 
                                    target="_blank" class="btn btn-sm btn-outline btn-outline-primary">
                                     <i class="bi bi-download me-2"></i>Ver archivo
                                 </a>

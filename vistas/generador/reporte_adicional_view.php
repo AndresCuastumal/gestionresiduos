@@ -43,6 +43,8 @@ $revisionController = new RevisionesController($conn);
 
 // ✅ NUEVO: Verificar estado del formulario de accidentes
 $estado_formulario_accidentes = $revisionController->obtenerEstadoFormulario($generador_id, $anio_actual, 'accidentes');
+$estado_formulario_mensual = $revisionController->obtenerEstadoFormulario($generador_id, $anio_actual, 'mensual');
+$estado_formulario_contingencias = $revisionController->obtenerEstadoFormulario($generador_id, $anio_actual, 'contingencias');
 $puede_editar = ($estado_formulario_accidentes === 'rechazado');
 
 // ✅ NUEVA LÓGICA: Puede editar si está rechazado O si no hay revisión (estado inicial)
@@ -137,13 +139,16 @@ if (!$reporte_bloqueado) {
                 
                 <?php if ($menu_navegacion_activo || $reporte_bloqueado): ?>
                     <!-- Menú completo activo cuando los tres formularios están llenos -->
-                    <li class="breadcrumb-item"><a href="reporte_mensual_view.php?id=<?= $generador_id ?>">Reporte Mensual</a></li>
-                    <li class="breadcrumb-item active">Capacitaciones</li>
-                    <li class="breadcrumb-item"><a href="reporte_contingencias_view.php?id=<?= $generador_id ?>">Contingencias</a></li>
+                    <li class="breadcrumb-item"><a href="reporte_mensual_view.php?id=<?= $generador_id ?>">Reporte Mensual de residuos</a></li>
+                    <li class="breadcrumb-item active"><b><u>Capacitaciones, accidentes y auditorías</u></b></li>
+                    <li class="breadcrumb-item"><a href="reporte_contingencias_view.php?id=<?= $generador_id ?>">Plan de Contingencias</a></li>
                 <?php else: ?>
                     <!-- Menú simplificado cuando no están todos completos -->
-                    <li class="breadcrumb-item"><a href="reporte_mensual_view.php?id=<?= $generador_id ?>">Reporte Mensual</a></li>
-                    <li class="breadcrumb-item active">Capacitaciones y Accidentes</li>
+                    <li class="breadcrumb-item"><a href="reporte_mensual_view.php?id=<?= $generador_id ?>">Reporte Mensual de residuos</a></li>
+                    <li class="breadcrumb-item active"><b><u>Capacitaciones, Accidentes y Auditorías</u></b></li>
+                    <?php if($estado_formulario_accidentes=='pendiente'): ?>
+                        <li class="breadcrumb-item"><a href="reporte_contingencias_view.php?id=<?= $generador_id ?>">Plan de Contingencias</a></li>
+                    <?php endif; ?> 
                 <?php endif; ?>
             </ol>
         </nav>
@@ -155,39 +160,34 @@ if (!$reporte_bloqueado) {
             </a>
         </div>
 
-        <!-- Mensaje de confirmación del primer formulario -->
-        <?php if ($info_adicional and $contingencia['estado']=='borrador'): ?>
-        <div class="alert alert-success mb-4">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            <strong>¡Datos guardados exitosamente!</strong> Los datos del reporte mensual de residuos para el año <?= $anio_actual ?> han sido guardados correctamente. 
-            Ahora complete la información adicional sobre capacitaciones, accidentes y auditorías.
-        </div>
-
-        <!-- Mensaje informativo si ya existe información guardada -->
-        
-        <?php if ($info_adicional && !$reporte_bloqueado): ?>
-        <div class="alert alert-info mb-4">
-            <i class="bi bi-info-circle-fill me-2"></i>
-            <strong>Información precargada:</strong> Se han encontrado datos guardados previamente para este año. 
-            Puede modificar los campos que necesite y guardar los cambios.
-        </div>
-        <?php endif; ?>
-        
         <!-- Tarjeta informativa -->
         <div class="card mb-4" style="background-color: #f8f4ceff;">
             <div class="card-body">
-                <p class="card-text" style="text-align: justify; text-justify: inter-word;">
-                    Complete la información sobre capacitaciones, accidentes laborales y auditorías relacionadas 
-                    con la gestión de residuos peligrosos para el año <?= $anio_actual ?>. 
-                    Todos los campos marcados con <span class="text-danger">*</span> son obligatorios.
-                </p>
                 <p class="mb-0"><strong>Establecimiento:</strong> <?= htmlspecialchars($generador['nom_generador']) ?></p>
             </div>
         </div>
+
+        <!-- Mensaje de confirmación del primer formulario -->
+        <?php if ($estado_formulario_mensual == 'pendiente' && $estado_formulario_accidentes == 'sin_datos'): ?>
+            <div class="alert alert-success mb-4">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <strong>¡Datos guardados exitosamente!</strong> Los datos del reporte mensual de residuos para el año <?= $anio_actual ?> han sido guardados correctamente. 
+                Ahora complete la información adicional sobre capacitaciones, accidentes y auditorías.
+            </div>
         <?php endif; ?>
+        <!-- Tarjeta informativa -->
+        <div class="info-card mt-4" style="background-color: #cee2f8ff;">
+            <h6><i class="bi bi-info-circle me-2"></i>Instrucciones</h6>            
+            <p class="card-text" style="text-align: justify; text-justify: inter-word;">
+                Complete la información sobre capacitaciones, accidentes laborales y auditorías relacionadas 
+                con la gestión de residuos peligrosos para el año <?= $anio_actual ?>. 
+                Todos los campos marcados con <span class="text-danger">*</span> son obligatorios.
+            </p>
+        </div>
+        
         <div class="card">
             <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Formulario de Reporte Adicional</h5>
+                <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Reporte año <?= $anio_actual ?></h5>
                 <!-- ✅ NUEVO: Badge de estado -->
                 <span class="badge 
                     <?= $estado_formulario_accidentes === 'aprobado' ? 'bg-success' : '' ?>
@@ -243,7 +243,7 @@ if (!$reporte_bloqueado) {
                                         <?= !$modo_edicion ? 'style="background-color: #f8f9fa; border-color: #dee2e6;"' : '' ?>>
                                 <?php if ($info_adicional && !empty($info_adicional['archivo_cronograma'])): ?>
                                 <div class="form-text">
-                                    <a href="../../procesos/uploads/soportes_anuales/<?= $info_adicional['archivo_cronograma'] ?>" 
+                                    <a href="../../procesos/generador/soportes_generador/<?= $info_adicional['archivo_cronograma'] ?>" 
                                        target="_blank" class="btn btn-sm btn-outline-primary mt-1">
                                         <i class="bi bi-download me-1"></i>Ver PDF actual
                                     </a>
@@ -288,7 +288,7 @@ if (!$reporte_bloqueado) {
                                 <div class="form-text">Relacionados únicamente con manejo de residuos</div>
                                 <?php if ($info_adicional && !empty($info_adicional['archivo_soportes_capacitaciones'])): ?>
                                 <div class="form-text">
-                                    <a href="../../procesos/uploads/soportes_anuales/<?= $info_adicional['archivo_soportes_capacitaciones'] ?>" 
+                                    <a href="../../procesos/generador/soportes_generador/<?= $info_adicional['archivo_soportes_capacitaciones'] ?>" 
                                        target="_blank" class="btn btn-sm btn-outline-primary mt-1">
                                         <i class="bi bi-download me-1"></i>Ver PDF actual
                                     </a>
@@ -437,7 +437,7 @@ if (!$reporte_bloqueado) {
                                 <div class="form-text">Acta(s) de auditorías realizadas</div>
                                 <?php if ($info_adicional && !empty($info_adicional['archivo_resultados_auditorias'])): ?>
                                 <div class="form-text">
-                                    <a href="../../procesos/uploads/soportes_anuales/<?= $info_adicional['archivo_resultados_auditorias'] ?>" 
+                                    <a href="../../procesos/generador/soportes_generador/<?= $info_adicional['archivo_resultados_auditorias'] ?>" 
                                        target="_blank" class="btn btn-sm btn-outline-primary mt-1">
                                         <i class="bi bi-download me-1"></i>Ver PDF actual
                                     </a>
@@ -457,7 +457,7 @@ if (!$reporte_bloqueado) {
                                 <div class="form-text">Plan de mejoramiento para el año evaluado</div>
                                 <?php if ($info_adicional && !empty($info_adicional['archivo_plan_mejoramiento'])): ?>
                                 <div class="form-text">
-                                    <a href="../../procesos/uploads/soportes_anuales/<?= $info_adicional['archivo_plan_mejoramiento'] ?>" 
+                                    <a href="../../procesos/generador/soportes_generador/<?= $info_adicional['archivo_plan_mejoramiento'] ?>" 
                                        target="_blank" class="btn btn-sm btn-outline-primary mt-1">
                                         <i class="bi bi-download me-1"></i>Ver PDF actual
                                     </a>

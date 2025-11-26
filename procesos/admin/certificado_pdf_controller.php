@@ -1,5 +1,5 @@
 <?php
-require_once '../../includes/conexion.php';
+require_once __DIR__ . '/../../includes/conexion.php';
 
 // Incluir DomPDF via Composer
 require_once __DIR__ . '/../../vendor/autoload.php'; // Ruta corregida
@@ -59,7 +59,7 @@ class CertificadoPdfController {
             $dompdf->render();
             
             // Crear directorio si no existe
-            $directorio = "../../procesos/uploads/certificados/";
+            $directorio = __DIR__ . "/certificados/";
             if (!is_dir($directorio)) {
                 mkdir($directorio, 0755, true);
                 error_log("Directorio creado: $directorio");
@@ -90,7 +90,10 @@ class CertificadoPdfController {
             $tamano = filesize($ruta_archivo);
             error_log("✅ Certificado PDF generado exitosamente: $ruta_archivo ($tamano bytes)");
             
-            return $nombre_archivo;
+            return [
+                'nombre_archivo' => $nombre_archivo,
+                'ruta_completa' => $ruta_archivo
+            ];
             
         } catch (Exception $e) {
             error_log("❌ Error en generación de PDF: " . $e->getMessage());
@@ -221,8 +224,9 @@ class CertificadoPdfController {
     
     // Obtener ruta del certificado si existe
     public function obtenerRutaCertificado($generador_id, $anio) {
+        $directorio = __DIR__ . "/certificados/";
         $nombre_archivo = "certificado_aprobacion_{$generador_id}_{$anio}.pdf";
-        $ruta = "../../procesos/uploads/certificados/" . $nombre_archivo;
+        $ruta = $directorio . $nombre_archivo;
         
         return file_exists($ruta) ? $ruta : null;
     }

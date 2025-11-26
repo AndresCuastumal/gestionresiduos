@@ -101,8 +101,8 @@ class ReporteMensualController {
             }
             
             // Eliminar archivo si se subió pero hubo error
-            if (isset($nombre_archivo) && $archivo && file_exists('../uploads/soportes_anuales/' . $nombre_archivo)) {
-                unlink('../uploads/soportes_anuales/' . $nombre_archivo);
+            if (isset($nombre_archivo) && $archivo && file_exists('soportes_generador/actaresiduos_' . $nombre_archivo)) {
+                unlink('soportes_generador/actaresiduos_' . $nombre_archivo);
             }
             
             throw new Exception("Error al guardar reporte: " . $e->getMessage());
@@ -112,7 +112,7 @@ class ReporteMensualController {
     
     // ===== MÉTODO: PROCESAR ARCHIVO PDF =====
     private function procesarArchivoPDF($archivo, $generador_id, $anio) {
-        $directorio_uploads = '../uploads/soportes_anuales/';
+        $directorio_uploads = 'soportes_generador/';
         
         // Crear directorio si no existe
         if (!is_dir($directorio_uploads)) {

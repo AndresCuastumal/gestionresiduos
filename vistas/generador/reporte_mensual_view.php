@@ -38,6 +38,7 @@ if (isset($_GET['id'])) {
 
     // ✅ NUEVO: Verificar estado del formulario mensual
     $estado_formulario_mensual = $revisionController->obtenerEstadoFormulario($generador_id, $anio_actual, 'mensual');
+    $estado_formulario_accidentes = $revisionController->obtenerEstadoFormulario($generador_id, $anio_actual, 'accidentes');
     $puede_editar = ($estado_formulario_mensual === 'rechazado');
 
     // ✅ NUEVA LÓGICA: Puede editar si está rechazado O si no hay revisión (estado inicial)
@@ -122,48 +123,43 @@ if(isset($contingencia) && is_array($contingencia) && isset($contingencia['estad
                 
                 <?php if ($menu_navegacion_activo || $reporte_bloqueado): ?>
                     <!-- Menú completo activo cuando los tres formularios están llenos -->
-                    <li class="breadcrumb-item active">Reporte Mensual</li>
-                    <li class="breadcrumb-item"><a href="reporte_adicional_view.php?id=<?= $generador_id ?>">Capacitaciones</a></li>
-                    <li class="breadcrumb-item"><a href="reporte_contingencias_view.php?id=<?= $generador_id ?>">Contingencias</a></li>
+                    <li class="breadcrumb-item active"><b><u>Reporte Mensual de residuos</u></b></li>
+                    <li class="breadcrumb-item"><a href="reporte_adicional_view.php?id=<?= $generador_id ?>">Capacitaciones, accidentes y auditorías</a></li>
+                    <li class="breadcrumb-item"><a href="reporte_contingencias_view.php?id=<?= $generador_id ?>">Plan de Contingencias</a></li>
                 <?php else: ?>
                     <!-- Menú simplificado cuando no están todos completos -->
-                    <li class="breadcrumb-item active">Reporte Mensual</li>
+                    <li class="breadcrumb-item active"><b><u>Reporte Mensual de Residuos</u></b></li>
+                    <?php if($estado_formulario_mensual=='pendiente'): ?>
+                        <li class="breadcrumb-item"><a href="reporte_adicional_view.php?id=<?= $generador_id ?>">Capacitaciones, accidentes y auditorías</a></li>
+                    <?php endif; ?>
+                    <?php if($estado_formulario_accidentes=='pendiente'): ?>
+                        <li class="breadcrumb-item"><a href="reporte_contingencias_view.php?id=<?= $generador_id ?>">Plan de contingencias</a></li>
+                    <?php endif; ?>    
                 <?php endif; ?>
             </ol>
         </nav>
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="bi bi-clipboard-data me-2"></i>Reporte Mensual de Residuos</h2>
+            
+
             <a href="listado_generadores_view.php" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-2"></i>Volver
             </a>
         </div>
 
-        <!-- Mensaje informativo si ya existe información guardada -->
-        <?php if ($revision_existente && isset($contingencia) && is_array($contingencia) && isset($contingencia['estado']) && $contingencia['estado']=='borrador'): ?>
-        <div class="alert alert-info mb-4">
-            <i class="bi bi-info-circle-fill me-2"></i>
-            <strong>Información precargada:</strong> Se han encontrado datos guardados previamente para este año. 
-            Puede modificar los campos que necesite y guardar los cambios.
-        </div>
-        
         <!-- Tarjeta informativa -->
         <div class="card mb-4" style="background-color: #f8f4ceff;">
             <div class="card-body">
-                <p class="card-text" style="text-align: justify; text-justify: inter-word;">
-                    Complete el reporte mensual de residuos en atención en salud y otras activides generados durante el año <?= $anio_actual ?>.
-                    Ingrese la cantidad en kilogramos (kg) para cada mes y adjunte el soporte documental correspondiente.
-                </p>
                 <p class="mb-0"><strong>Establecimiento:</strong> <?= htmlspecialchars($generador['nom_generador']) ?></p>
             </div>
         </div>
         <!-- Información adicional -->
-        <div class="info-card mt-4">
+        <div class="info-card mt-4" style="background-color: #cee2f8ff;">
             <h6><i class="bi bi-info-circle me-2"></i>Instrucciones y Categorías</h6>
             <ul class="mb-3">
                 <li>Ingrese la cantidad total de residuos peligrosos generados cada mes en kilogramos (kg)</li>
-                <li>El sistema calculará automáticamente su categoría basado en el promedio móvil de los últimos 6 meses</li>
-                <li>Puede dejar en blanco los meses sin generación de residuos</li>
+                <li>El sistema calculará automáticamente su categoría basado en el promedio móvil</li>                
             </ul>
             
             <h6 class="mt-3">Rangos de Categorización:</h6>
@@ -194,17 +190,6 @@ if(isset($contingencia) && is_array($contingencia) && isset($contingencia['estad
                 </div>
             </div>
         </div>
-
-        <div class="alert alert-warning mt-4">
-            <h6><i class="bi bi-exclamation-triangle me-2"></i>Importante</h6>
-            <ul class="mb-0">
-                <li>El PDF debe incluir <strong>todos los soportes mensuales</strong> del año <?= $anio_actual ?></li>
-                <li>El archivo será revisado por un administrador para validar la información</li>
-                <li>El estado de su reporte cambiará de estado "Sin revisión" a "Pendiente"</li>
-                <li>Recibirá una notificación cuando sea aprobado o rechazado</li>
-            </ul>
-        </div>
-        <?php endif; ?>
         
         <div class="card">
             <div class="card-header bg-light d-flex justify-content-between align-items-center">
@@ -242,7 +227,7 @@ if(isset($contingencia) && is_array($contingencia) && isset($contingencia['estad
                     </div>
                     
                     <!-- Datos del reporte mensual -->
-                    <h6 class="text-muted mb-3">Cantidad de residuos generados en atención en salud y otras actividades por mes (kg)</h6>
+                    <h6 class="text-muted mb-3">Cantidad de residuos peligrosos generados en atención en salud y otras actividades por mes (kg)</h6>
                     <div class="meses-grid">
                         <?php
                         $meses = [
@@ -276,7 +261,7 @@ if(isset($contingencia) && is_array($contingencia) && isset($contingencia['estad
 
                     <!-- Soporte documental -->
                     <div class="info-card mt-4">
-                        <h6><i class="bi bi-file-pdf me-2"></i>Soporte Documental Anual</h6>
+                        <h6><i class="bi bi-file-pdf me-2 text-danger"></i>Soporte Documental Anual</h6>
                         <div class="mb-3">
                             <label for="soporte_pdf" class="form-label">
                                 Cargar PDF con soportes de los 12 meses
@@ -289,14 +274,16 @@ if(isset($contingencia) && is_array($contingencia) && isset($contingencia['estad
                                 <?= !$revision_existente && $modo_edicion ? 'required' : '' ?> 
                                 <?= $disabled ?>
                                 <?= !$modo_edicion ? 'style="background-color: #f8f9fa; border-color: #dee2e6;"' : '' ?>>
-                            <div class="form-text">
-                                Suba un solo archivo PDF que incluya todos los certificados, actas o soportes 
-                                de la empresa recolectora para los 12 meses del año. Tamaño máximo: 10MB.
+                            <div class="alert alert-warning mt-4">
+                                <h6><i class="bi bi-exclamation-triangle me-2"></i>Importante</h6>
+                                <ul class="mb-0">
+                                    <li>El PDF debe incluir <strong>todos los soportes mensuales</strong> del año <?= $anio_actual ?> en un sólo archivo</li>
+                                    <li>Tamaño máximo: 10 MB</li>                                    
+                                </ul>
                             </div>
-                            
                             <?php if ($revision_existente && !empty($revision_existente['soporte_pdf'])): ?>
                             <div class="form-text mt-2">
-                                <a href="../../procesos/uploads/soportes_anuales/<?= $revision_existente['soporte_pdf'] ?>" 
+                                <a href="../../procesos/generador/soportes_generador/<?= $revision_existente['soporte_pdf'] ?>" 
                                 target="_blank" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-download me-1"></i>Ver PDF actual
                                 </a>

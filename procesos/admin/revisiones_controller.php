@@ -569,24 +569,30 @@ class RevisionesController {
             error_log("✅ TODOS APROBADOS - Generando certificado...");
             
             try {
-                // Generar PDF
-                $nombre_pdf = $pdfController->generarCertificadoAprobacion($generador_id, $anio);
-                $ruta_pdf = "../../procesos/uploads/certificados/" . $nombre_pdf;
+                // ✅ CORREGIDO: Manejar el array que devuelve el método
+                $resultado_pdf = $pdfController->generarCertificadoAprobacion($generador_id, $anio);
+                $ruta_pdf = $resultado_pdf['ruta_completa'];
+                $nombre_pdf = $resultado_pdf['nombre_archivo'];
                 
-                error_log("PDF generado: " . $nombre_pdf);
+                error_log("✅ PDF generado - Ruta: " . $ruta_pdf);
+                error_log("✅ PDF generado - Nombre: " . $nombre_pdf);
+                
+                // Verificar que el archivo existe antes de enviar
+                if (!file_exists($ruta_pdf)) {
+                    throw new Exception("El archivo PDF no se encontró en: $ruta_pdf");
+                }
                 
                 // Enviar email con certificado
                 $email_enviado = $emailController->enviarCertificadoAprobacion($generador_id, $anio, $ruta_pdf);
-                error_log("Email enviado: " . ($email_enviado ? '✅ SÍ' : '❌ NO'));
+                error_log("📧 Email enviado: " . ($email_enviado ? '✅ SÍ' : '❌ NO'));
                 
-                // ✅ SOLO AQUÍ marcar como finalizado (con PDF)
+                // Marcar como finalizado con el nombre del PDF
                 $finalizado = $this->marcarComoFinalizado($generador_id, $anio, $nombre_pdf);
-                error_log("Marcado como finalizado: " . ($finalizado ? '✅ SÍ' : '❌ NO'));
+                error_log("📝 Marcado como finalizado: " . ($finalizado ? '✅ SÍ' : '❌ NO'));
                 
             } catch (Exception $e) {
                 error_log("❌ ERROR en generación de certificado: " . $e->getMessage());
             }
-            
         } 
         // ✅ SI HAY RECHAZOS - solo enviar notificación, NO finalizar
         elseif ($estados['formulario_mensual'] === 'rechazado' || 
@@ -644,8 +650,9 @@ class RevisionesController {
     // Marcar revisión como finalizada (bloquear ediciones)
     // Marcar revisión como finalizada (bloquear ediciones) - CORREGIDO
     private function marcarComoFinalizado($generador_id, $anio, $nombre_pdf = null) {
-        error_log("Intentando marcar como finalizado: generador_id=$generador_id, anio=$anio");
-        error_log("PDF a guardar: " . ($nombre_pdf ?: 'Ninguno'));
+        error_log("🎯 === MARCANDO COMO FINALIZADO ===");
+        error_log("🎯 generador_id: $generador_id, anio: $anio");
+        error_log("🎯 nombre_pdf: " . ($nombre_pdf ?: 'Ninguno'));
         
         $sql = "
             UPDATE revisiones_anuales 
@@ -654,7 +661,6 @@ class RevisionesController {
                 certificado_generado = 1
         ";
         
-        // Si hay un PDF, agregar el campo soporte_pdf
         if ($nombre_pdf) {
             $sql .= ", certificado_pdf = ?";
             $params = [$nombre_pdf, $generador_id, $anio];
@@ -664,22 +670,15 @@ class RevisionesController {
         
         $sql .= " WHERE generador_id = ? AND anio = ?";
         
+        error_log("🎯 SQL: $sql");
+        error_log("🎯 Params: " . print_r($params, true));
+        
         $stmt = $this->conn->prepare($sql);
         $resultado = $stmt->execute($params);
         $filas_afectadas = $stmt->rowCount();
         
-        error_log("Resultado update: " . ($resultado ? 'true' : 'false'));
-        error_log("Filas afectadas: " . $filas_afectadas);
-        
-        // Verificar que se actualizó correctamente
-        if ($resultado && $filas_afectadas > 0) {
-            error_log("✅ Revisión marcada como finalizada correctamente");
-            if ($nombre_pdf) {
-                error_log("✅ PDF guardado en base de datos: $nombre_pdf");
-            }
-        } else {
-            error_log("❌ Error al marcar como finalizado");
-        }
+        error_log("🎯 Resultado: " . ($resultado ? 'true' : 'false'));
+        error_log("🎯 Filas afectadas: $filas_afectadas");
         
         return $resultado;
     }

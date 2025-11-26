@@ -41,7 +41,7 @@ try {
         return $nombre_archivo;
     }
     
-    $directorio = '../uploads/soportes_anuales/';
+    $directorio = 'soportes_generador/';
     $archivo_cronograma = procesarArchivo($_FILES['archivo_cronograma'], $directorio, 'cronograma_', $generador_id, $anio, 'archivo_cronograma');
     $archivo_soportes = procesarArchivo($_FILES['archivo_soportes_capacitaciones'], $directorio, 'soportes_capacitaciones_', $generador_id, $anio, 'archivo_soportes_capacitaciones');
     $archivo_resultados_auditorias = procesarArchivo($_FILES['archivo_resultados_auditorias'], $directorio, 'resultados_auditorias_', $generador_id, $anio, 'archivo_resultados_auditorias');

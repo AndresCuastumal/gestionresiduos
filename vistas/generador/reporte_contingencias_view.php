@@ -42,6 +42,7 @@ $anio_actual = $_SESSION['anio_reportando'];
 $revisionController = new RevisionesController($conn);
 
 // ✅ NUEVO: Verificar estado del formulario de contingencias
+$estado_formulario_accidentes = $revisionController->obtenerEstadoFormulario($generador_id, $anio_actual, 'accidentes');
 $estado_formulario_contingencias = $revisionController->obtenerEstadoFormulario($generador_id, $anio_actual, 'contingencias');
 $puede_editar = ($estado_formulario_contingencias === 'rechazado');
 
@@ -161,13 +162,11 @@ if($reporte_confirmado): ?>
         <nav aria-label="breadcrumb" class="mb-3">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="../dashboard.php">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="listado_generadores_view.php">Mis Establecimientos</a></li>
-                
-                
+                <li class="breadcrumb-item"><a href="listado_generadores_view.php">Mis Establecimientos</a></li>   
                     <!-- Menú completo activo cuando los tres formularios están llenos -->
-                    <li class="breadcrumb-item"><a href="reporte_mensual_view.php?id=<?= $generador_id ?>">Reporte Mensual</a></li>
-                    <li class="breadcrumb-item"><a href="reporte_adicional_view.php?id=<?= $generador_id ?>">Capacitaciones</a></li>
-                    <li class="breadcrumb-item active">Contingencias</li>
+                    <li class="breadcrumb-item"><a href="reporte_mensual_view.php?id=<?= $generador_id ?>">Reporte Mensual de residuos</a></li>
+                    <li class="breadcrumb-item"><a href="reporte_adicional_view.php?id=<?= $generador_id ?>">Capacitaciones, accidentes y auditorías</a></li>
+                    <li class="breadcrumb-item active"><b><u>Plan de Contingencias</u></b></li>
                 
             </ol>
         </nav>
@@ -180,48 +179,35 @@ if($reporte_confirmado): ?>
         </div>
 
         <!-- Mensaje de confirmación del formulario anterior -->
-        <?php if (!$reporte_confirmado): ?>
+        <?php if ($estado_formulario_accidentes == 'pendiente' && $estado_formulario_contingencias == 'sin_datos'): ?>
         <div class="alert alert-success mb-4">
             <i class="bi bi-check-circle-fill me-2"></i>
-            <strong>¡Datos guardados exitosamente!</strong> La información de capacitaciones y accidentes ha sido guardada correctamente. 
+            <strong>¡Datos guardados exitosamente!</strong> La información de capacitaciones, accidentes y auditorías ha sido guardada correctamente. 
             Ahora complete el registro de contingencias relacionadas con la gestión de residuos.
         </div>
-
-        <!-- Mensaje informativo si ya existe información guardada -->
-        <?php if ($contingencias_existentes): ?>
-        <div class="alert alert-info mb-4">
-            <i class="bi bi-info-circle-fill me-2"></i>
-            <strong>Información precargada:</strong> Se han encontrado datos de contingencias guardados previamente para este año. 
-            <?php if ($reporte_confirmado): ?>
-            <span class="text-danger">Este reporte ya ha sido confirmado y no puede ser modificado.</span>
-            <?php else: ?>
-            Puede modificar los campos que necesite y guardar los cambios.
-            <?php endif; ?>
-        </div>
-        <?php endif; ?>   
-
+        <?php endif; ?>
         <!-- Tarjeta informativa -->
         <div class="card mb-4" style="background-color: #f8f4ceff;">
-            <div class="card-body">
-                <p class="card-text" style="text-align: justify; text-justify: inter-word;">
-                    Registre las contingencias relacionadas con la gestión de residuos peligrosos durante el año <?= $anio_actual ?>.
-                    Complete la información de cada tipo de contingencia y las acciones implementadas.
-                </p>
+            <div class="card-body">                
                 <p class="mb-0"><strong>Establecimiento:</strong> <?= htmlspecialchars($generador['nom_generador']) ?></p>
             </div>
         </div>
-        <div class="alert alert-info mt-4">
-            <h6><i class="bi bi-info-circle me-2"></i>Información</h6>
-            <ul class="mb-0">
-                <li>Complete la información de todas las contingencias presentadas durante el período</li>
-                <li>Si no se presentó ninguna contingencia, deje el valor 0 en el número de contingencias</li>
-                <li>Puede guardar como <strong>borrador</strong> para continuar después o <strong>enviar para revisión</strong> para finalizar el proceso</li>
+        
+        <div class="info-card mt-4" style="background-color: #cee2f8ff;">
+            <h6><i class="bi bi-info-circle me-2"></i>Instrucciones</h6>
+            
+            <ul class="mb-3">
+                <li>Complete la información de todas las contingencias presentadas durante el año <?= $anio_actual ?></li>
+                <li>Si no se presentó ninguna contingencia, deje el valor 0 en el campo <strong>Número de contingencias</strong> de cada una de ellas</li>
+                <li>Puede <strong>Guardar borrador</strong> para continuar editando después cualquiera de los 3 formularios</li>
+                <li>Si confirma <strong>Enviar para revisión</strong>, el sistema enviará un correo de notificación y cerrará la edición de los formularios</li>
             </ul>
+            
         </div>
-        <?php endif; ?>
+        
         <div class="card">
             <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Registro de Contingencias</h5>
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Reporte año <?= $anio_actual ?></h5>
                 <!-- ✅ NUEVO: Badge de estado -->
                 <span class="badge 
                     <?= $estado_formulario_contingencias === 'aprobado' ? 'bg-success' : '' ?>

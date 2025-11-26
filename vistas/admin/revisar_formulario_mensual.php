@@ -27,11 +27,11 @@ $generador = $mensualController->obtenerDatosGenerador($generador_id);
 $reportes_existentes = $mensualController->obtenerReportesExistentes($generador_id, $anio);
 
 // Verificar si la revisión está finalizada
-if ($revisionController->estaFinalizado($generador_id, $anio)) {
-    $_SESSION['warning'] = "Esta revisión ya ha sido finalizada y no puede ser modificada.";
-    header("Location: listado_revisiones_view.php");
-    exit();
-}
+//if ($revisionController->estaFinalizado($generador_id, $anio)) {
+//    $_SESSION['warning'] = "Esta revisión ya ha sido finalizada y no puede ser modificada.";
+ //   header("Location: listado_revisiones_view.php");
+//    exit();
+//}
 
 //procesar formulario de revisión
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -164,7 +164,7 @@ include '../../includes/header.php';
                 <?php if (!empty($revision['soporte_pdf'])): ?>
                 <div class="mt-4">
                     <h6 class="text-muted">Soporte Documental</h6>
-                    <a href="../../procesos/uploads/soportes_anuales/<?= $revision['soporte_pdf'] ?>" 
+                    <a href="../../procesos/generador/soportes_generador/<?= $revision['soporte_pdf'] ?>" 
                        target="_blank" class="btn btn-outline btn-outline-primary">
                         <i class="bi bi-download me-2"></i>Ver PDF de soporte
                     </a>

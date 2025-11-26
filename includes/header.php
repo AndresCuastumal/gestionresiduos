@@ -27,7 +27,7 @@
                         <img src="/gestionresiduos/assets/css/logoNuevoSMS2024.png" alt="Logo SMS" 
                             class="me-2 img-fluid d-md-none" 
                             style="max-height: 40px; width: auto;">
-                        <h1 class="h3 mb-0 text-center">Sistema de Reporte de Gestión de Residuos Generados en Atención en Salud y Otras Actividades</h1>
+                        <h1 class="h3 mb-0 text-center">Reporte de Gestión Integral de Residuos Generados en la Atención en Salud y Otras Actividades</h1>
                     </div>
                     <?php if (isset($_SESSION['usuario_id'])): ?>
                     <div >

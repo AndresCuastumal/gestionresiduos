@@ -42,11 +42,11 @@ $generador = $mensualController->obtenerDatosGenerador($generador_id);
 $datosContingencias = $contingenciasController->obtenerDatosContingencias($generador_id, $anio);
 
 // Verificar si la revisión está finalizada
-if ($revisionController->estaFinalizado($generador_id, $anio)) {
-    $_SESSION['warning'] = "Esta revisión ya ha sido finalizada y no puede ser modificada.";
-    header("Location: listado_revisiones_view.php");
-    exit();
-}
+//if ($revisionController->estaFinalizado($generador_id, $anio)) {
+//    $_SESSION['warning'] = "Esta revisión ya ha sido finalizada y no puede ser modificada.";
+//    header("Location: listado_revisiones_view.php");
+//    exit();
+//}
 
 // Obtener listas de acciones
 $accionesIncendios = $contingenciasController->obtenerAccionesIncendios();
@@ -67,6 +67,12 @@ $accionesOperativasData = $contingenciasController->obtenerAccionesJSON($datosCo
 
 // Procesar formulario de revisión
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // ✅ AGREGAR ESTA VERIFICACIÓN
+    if ($revisionController->estaFinalizado($generador_id, $anio)) {
+        $_SESSION['error'] = "Esta revisión ya ha sido finalizada y no puede ser modificada.";
+        header("Location: revisar_formulario_contingencias.php?generador_id=$generador_id&anio=$anio");
+        exit();
+    }
     $estado = $_POST['estado'];
     $observaciones = $_POST['observaciones'] ?? '';
     
@@ -375,7 +381,45 @@ include '../../includes/header.php';
                             <h6 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Evaluación del Administrador</h6>
                         </div>
                         <div class="card-body">
-                            <?php if ($formulario_sin_datos): ?>
+                            <?php if ($revisionController->estaFinalizado($generador_id, $anio)): ?>
+                                <!-- ⭐ NUEVO: Mostrar alerta cuando está finalizado -->
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-lock-fill me-2"></i>
+                                    <strong>Revisión Finalizada</strong> - Esta revisión ya ha sido completada y no puede ser modificada. 
+                                    <?php if ($revision['estado_general'] === 'aprobado'): ?>
+                                        El certificado fue enviado al generador.
+                                    <?php else: ?>
+                                        Las observaciones fueron enviadas al generador.
+                                    <?php endif; ?>
+                                </div>
+                                
+                                <!-- Campos deshabilitados -->
+                                <fieldset disabled>
+                                    <div class="mb-3">
+                                        <label class="form-label">Estado del formulario:</label>
+                                        <select name="estado" class="form-select">
+                                            <option value="<?= $revision['formulario_contingencias'] ?>" selected>
+                                                <?= ucfirst($revision['formulario_contingencias']) ?>
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Observaciones:</label>
+                                        <textarea name="observaciones" class="form-control" rows="4"><?= htmlspecialchars($revision['observaciones_contingencias'] ?? '') ?></textarea>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between">
+                                        <a href="listado_revisiones_view.php" class="btn btn-outline-secondary">
+                                            <i class="bi bi-arrow-left me-2"></i>Volver
+                                        </a>
+                                        <button type="button" class="btn btn-secondary">
+                                            <i class="bi bi-lock me-2"></i>Formulario Bloqueado
+                                        </button>
+                                    </div>
+                                </fieldset>
+
+                            <?php elseif ($formulario_sin_datos): ?>
                                 <!-- Mostrar mensaje cuando no hay datos -->
                                 <div class="alert alert-info">
                                     <i class="bi bi-info-circle me-2"></i>
@@ -410,7 +454,7 @@ include '../../includes/header.php';
                                     </button>
                                 </div>
                             <?php else: ?>
-                                <!-- Formulario normal cuando hay datos -->
+                                <!-- Formulario normal cuando hay datos y NO está finalizado -->
                                 <div class="mb-3">
                                     <label class="form-label">Estado del formulario:</label>
                                     <select name="estado" class="form-select" required>

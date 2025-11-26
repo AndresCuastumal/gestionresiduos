@@ -3,7 +3,7 @@ require __DIR__ . '/../vendor/autoload.php'; // Para TCPDF o similar
 
 function generarCertificado($generador_id, $anio, $nombre_usuario, $nombre_generador) {
     // Crear directorio si no existe
-    $directorio = '../uploads/certificados/';
+    $directorio = '../procesos/admin/certificados/';
     if (!is_dir($directorio)) {
         mkdir($directorio, 0755, true);
     }
