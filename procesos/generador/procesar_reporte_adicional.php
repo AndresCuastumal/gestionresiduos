@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once '../../includes/conexion.php';
+// ✅ SOLO incluir controlador de revisiones para validación
+require_once '../admin/revisiones_controller.php';
 
 // Verificar que viene del formulario adicional
 if (!isset($_SESSION['generador_id_reportando'])) {
@@ -11,7 +13,41 @@ if (!isset($_SESSION['generador_id_reportando'])) {
 $generador_id = $_SESSION['generador_id_reportando'];
 $anio = $_SESSION['anio_reportando'];
 
+// ✅ Crear controlador de revisiones
+$revisionController = new RevisionesController($conn);
+
 try {
+    // ✅ VALIDACIÓN DE INTENTOS ANTES DE PROCESAR
+    $estado_actual = $revisionController->obtenerEstadoFormulario($generador_id, $anio, 'accidentes');
+    
+    error_log("=== PROCESANDO REPORTE ADICIONAL ===");
+    error_log("Generador ID: $generador_id, Año: $anio");
+    error_log("Estado actual del formulario accidentes: " . $estado_actual);
+    
+    // Si el formulario está rechazado, validar intentos de corrección
+    if ($estado_actual === 'rechazado') {
+        error_log("Formulario en estado RECHAZADO - Validando intentos...");
+        
+        // Verificar si puede reenviar correcciones
+        if (!$revisionController->puedeReenviarCorreccion($generador_id, $anio)) {
+            $infoIntentos = $revisionController->obtenerInfoIntentos($generador_id, $anio);
+            
+            // ✅ CORREGIDO: No usar 'max_intentos_permitidos' que no existe
+            // Definir el límite manualmente según tu configuración
+            $limite_intentos = 2; // Cambia a 1 o 2 según necesites
+            $mensaje_error = "Has alcanzado el número máximo de intentos de corrección permitidos. " .
+                           "(" . $infoIntentos['intentos_correccion'] . " de " . $limite_intentos . " intento(s) utilizado(s))";
+            
+            error_log("VALIDACIÓN FALLIDA: " . $mensaje_error);
+            $_SESSION['error'] = $mensaje_error;
+            header("Location: ../../vistas/generador/reporte_adicional_view.php?id=" . $generador_id);
+            exit();
+        }
+        
+        error_log("✅ VALIDACIÓN EXITOSA: Intentos disponibles para corrección");
+        // ✅ IMPORTANTE: NO INCREMENTAR AQUÍ - Se hará cuando se envíe el correo de rechazo
+    }
+    
     // Procesar archivos - SOLO si se subieron nuevos
     function procesarArchivo($archivo, $directorio, $prefijo, $generador_id, $anio, $campo_existente) {
         global $conn;
@@ -112,7 +148,12 @@ try {
                 $anio
             ]);
             
-            $_SESSION['mensaje_exito'] = "¡Información adicional actualizada! Complete ahora el plan de contingencias.";
+            // ✅ Mensaje diferenciado para correcciones (SIN REFERENCIA A CORREO)
+            if ($estado_actual === 'rechazado') {
+                $_SESSION['mensaje_exito'] = "¡Correcciones de la información adicional guardadas y enviadas para revisión!";
+            } else {
+                $_SESSION['mensaje_exito'] = "¡Información adicional actualizada! Complete ahora el plan de contingencias.";
+            }
         } else {
             // Insertar nuevo registro
             $stmt = $conn->prepare("INSERT INTO reporte_anual_adicional 
@@ -141,7 +182,7 @@ try {
             $_SESSION['mensaje_exito'] = "¡Información adicional guardada! Complete ahora el plan de contingencias.";
         }
         
-        // ACTUALIZAR ESTADO EN REVISIONES_ANUALES - NUEVO CÓDIGO
+        // ✅ ACTUALIZAR ESTADO EN REVISIONES_ANUALES
         // Verificar si existe registro en revisiones_anuales
         $stmt_check_revision = $conn->prepare("SELECT generador_id FROM revisiones_anuales WHERE generador_id = ? AND anio = ?");
         $stmt_check_revision->execute([$generador_id, $anio]);
@@ -166,6 +207,12 @@ try {
             $stmt_insert->execute([$generador_id, $anio]);
         }
         
+        // ✅ Log del procesamiento exitoso
+        error_log("PROCESAMIENTO EXITOSO - Reporte adicional guardado para generador: $generador_id, año: $anio");
+        if ($estado_actual === 'rechazado') {
+            error_log("CORRECCIÓN ENVIADA - Se procesó corrección del formulario de accidentes");
+        }
+        
         // Confirmar transacción
         $conn->commit();
         
@@ -180,6 +227,7 @@ try {
     }
     
 } catch (Exception $e) {
+    error_log("ERROR en procesar_reporte_adicional: " . $e->getMessage());
     $_SESSION['error'] = $e->getMessage();
     header("Location: ../../vistas/generador/reporte_adicional_view.php?id=" . $generador_id);
     exit();

@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once '../../includes/conexion.php';
+// ✅ NUEVO: Incluir el controlador de revisiones
+require_once '../../procesos/admin/revisiones_controller.php';
 
 class GeneradorController {
     private $conn;
@@ -17,6 +19,7 @@ class GeneradorController {
         }
     }
 
+    
     // Método para obtener subcategorías por id_sujeto
     public function getSubcategoriasPorSujeto($id_sujeto) {
         try {
@@ -29,6 +32,7 @@ class GeneradorController {
             return [];
         }
     }
+    
     public function obtenerGeneradorPorId($id) {
         try {
             $stmt = $this->conn->prepare("SELECT * FROM generador WHERE id = ?");
@@ -56,6 +60,102 @@ class GeneradorController {
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->processForm();
+        }
+    }
+
+    // ✅ NUEVO: Método para validar si puede enviar correcciones
+    public function puedeEnviarCorreccion($generador_id, $anio, $tipo_formulario) {
+        try {
+            $revisionController = new RevisionesController($this->conn);
+            
+            // 1. Verificar que no esté finalizado
+            if ($revisionController->estaFinalizado($generador_id, $anio)) {
+                return [
+                    'puede_editar' => false,
+                    'mensaje' => 'Esta revisión ya ha sido finalizada y no puede ser modificada.'
+                ];
+            }
+            
+            // 2. Verificar que tenga intentos disponibles
+            if (!$revisionController->puedeReenviarCorreccion($generador_id, $anio)) {
+                return [
+                    'puede_editar' => false,
+                    'mensaje' => 'Has alcanzado el número máximo de intentos de corrección permitidos.'
+                ];
+            }
+            
+            // 3. Verificar que el formulario específico esté rechazado
+            $estado = $revisionController->obtenerEstadoFormulario($generador_id, $anio, $tipo_formulario);
+            
+            if ($estado !== 'rechazado') {
+                return [
+                    'puede_editar' => false,
+                    'mensaje' => 'Este formulario no requiere correcciones en este momento.'
+                ];
+            }
+            
+            return [
+                'puede_editar' => true,
+                'mensaje' => 'Puede realizar correcciones.'
+            ];
+            
+        } catch (Exception $e) {
+            error_log("Error en puedeEnviarCorreccion: " . $e->getMessage());
+            return [
+                'puede_editar' => false,
+                'mensaje' => 'Error al verificar permisos de corrección.'
+            ];
+        }
+    }
+
+    // ✅ NUEVO: Método para validar envío inicial (cuando no es corrección)
+    public function puedeEnviarFormulario($generador_id, $anio, $tipo_formulario) {
+        try {
+            $revisionController = new RevisionesController($this->conn);
+            
+            // 1. Verificar que no esté finalizado
+            if ($revisionController->estaFinalizado($generador_id, $anio)) {
+                return [
+                    'puede_editar' => false,
+                    'mensaje' => 'Esta revisión ya ha sido finalizada y no puede ser modificada.'
+                ];
+            }
+            
+            // 2. Verificar el estado del formulario
+            $estado = $revisionController->obtenerEstadoFormulario($generador_id, $anio, $tipo_formulario);
+            
+            // Permitir solo si está pendiente o sin_datos (envío inicial)
+            if ($estado === 'pendiente' || $estado === 'sin_datos') {
+                return [
+                    'puede_editar' => true,
+                    'mensaje' => 'Puede enviar el formulario.'
+                ];
+            }
+            
+            // Si está aprobado, no permitir edición
+            if ($estado === 'aprobado') {
+                return [
+                    'puede_editar' => false,
+                    'mensaje' => 'Este formulario ya ha sido aprobado y no requiere modificaciones.'
+                ];
+            }
+            
+            // Si está rechazado, usar la validación de correcciones
+            if ($estado === 'rechazado') {
+                return $this->puedeEnviarCorreccion($generador_id, $anio, $tipo_formulario);
+            }
+            
+            return [
+                'puede_editar' => false,
+                'mensaje' => 'Estado del formulario no reconocido.'
+            ];
+            
+        } catch (Exception $e) {
+            error_log("Error en puedeEnviarFormulario: " . $e->getMessage());
+            return [
+                'puede_editar' => false,
+                'mensaje' => 'Error al verificar permisos de envío.'
+            ];
         }
     }
 
@@ -199,6 +299,7 @@ class GeneradorController {
             $this->error = "Error al procesar el formulario: " . $e->getMessage();
         }
     }
+    
     // función para obtener los barrios
     public function obtenerBarrios() {
         try {

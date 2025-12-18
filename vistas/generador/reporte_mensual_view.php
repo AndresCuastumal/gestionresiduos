@@ -39,9 +39,16 @@ if (isset($_GET['id'])) {
     // ✅ NUEVO: Verificar estado del formulario mensual
     $estado_formulario_mensual = $revisionController->obtenerEstadoFormulario($generador_id, $anio_actual, 'mensual');
     $estado_formulario_accidentes = $revisionController->obtenerEstadoFormulario($generador_id, $anio_actual, 'accidentes');
-    $puede_editar = ($estado_formulario_mensual === 'rechazado');
+    
+    // ✅ NUEVO: Obtener información de intentos
+    $infoIntentos = $revisionController->obtenerInfoIntentos($generador_id, $anio_actual);
+    $permiteCorreccion = $revisionController->puedeReenviarCorreccion($generador_id, $anio_actual);
+    
+    // ✅ ACTUALIZADO: Puede editar si está rechazado Y tiene intentos disponibles
+    $puede_editar_por_estado = ($estado_formulario_mensual === 'rechazado');
+    $puede_editar = $puede_editar_por_estado && $permiteCorreccion;
 
-    // ✅ NUEVA LÓGICA: Puede editar si está rechazado O si no hay revisión (estado inicial)
+    // ✅ NUEVA LÓGICA: Puede editar si está rechazado (con intentos) O si no hay revisión (estado inicial)
     $modo_edicion = $puede_editar || ($estado_formulario_mensual === 'pendiente' || $estado_formulario_mensual === 'sin_datos');
     
     // Obtener información de revisión anual existente
@@ -100,9 +107,34 @@ if ($estado_formulario_mensual === 'rechazado'): ?>
         <strong>Formulario Requiere Correcciones</strong>
         <p class="mb-0 mt-2">Este formulario ha sido <strong>rechazado</strong> por el revisor. 
         Por favor realice las correcciones solicitadas y envíe nuevamente para revisión.</p>
+        
+        <!-- ✅ NUEVO: Mostrar información de intentos -->
+        <div class="mt-2">
+            <small>
+                <strong>Intentos de corrección:</strong> 
+                <?= $infoIntentos['intentos_correccion'] ?? 0 ?> de <?= $infoIntentos['max_intentos_permitidos'] ?? 1 ?> permitidos
+                <?php if (!$permiteCorreccion): ?>
+                    <span class="badge bg-danger ms-2">Límite alcanzado</span>
+                <?php endif; ?>
+            </small>
+        </div>
+        
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 <?php endif; ?>
+
+<?php
+// ✅ NUEVO: Mensaje cuando no hay intentos disponibles
+if ($estado_formulario_mensual === 'rechazado' && !$permiteCorreccion): ?>
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+        <i class="bi bi-ban me-2"></i>
+        <strong>Límite de Correcciones Alcanzado</strong>
+        <p class="mb-0 mt-2">Has agotado el número máximo de intentos de corrección permitidos para este formulario. 
+        No puedes realizar más modificaciones.</p>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
 <?php
 // Mensaje si el reporte ya fue enviado (mantener existente)
 if(isset($contingencia) && is_array($contingencia) && isset($contingencia['estado']) && $contingencia['estado']=='confirmado' && !$puede_editar): ?>
@@ -142,6 +174,20 @@ if(isset($contingencia) && is_array($contingencia) && isset($contingencia['estad
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="bi bi-clipboard-data me-2"></i>Reporte Mensual de Residuos</h2>
             
+            <!-- ✅ NUEVO: Mostrar información de intentos en el header -->
+            <?php if ($estado_formulario_mensual === 'rechazado'): ?>
+                <div class="text-end">
+                    <small class="text-muted d-block">
+                        <strong>Intentos:</strong> 
+                        <?= $infoIntentos['intentos_correccion'] ?? 0 ?>/<?= $infoIntentos['max_intentos_permitidos'] ?? 1 ?>
+                    </small>
+                    <?php if ($infoIntentos['fecha_ultimo_rechazo']): ?>
+                        <small class="text-muted">
+                            <strong>Último rechazo:</strong> <?= date('d/m/Y', strtotime($infoIntentos['fecha_ultimo_rechazo'])) ?>
+                        </small>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
 
             <a href="listado_generadores_view.php" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-2"></i>Volver

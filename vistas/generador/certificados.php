@@ -111,7 +111,7 @@ include '../../includes/header.php';
                                         <?= $certificado['fecha_finalizacion'] ? date('d/m/Y', strtotime($certificado['fecha_finalizacion'])) : 'No disponible' ?>
                                     </td>
                                     <td>
-                                        <a href="../../procesos/uploads/certificados/<?= $certificado['certificado_pdf'] ?>" 
+                                        <a href="../../procesos/admin/certificados/<?= $certificado['certificado_pdf'] ?>" 
                                            target="_blank"
                                            class="btn btn-sm btn-outline-danger"
                                            title="Descargar Certificado">

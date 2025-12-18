@@ -1,7 +1,8 @@
 <?php
 session_start();
 require_once '../../includes/conexion.php';
-require_once '../../includes/enviar_correo.php';
+// ✅ SOLO incluir controlador de revisiones
+require_once '../admin/revisiones_controller.php';
 
 // Verificar que viene del formulario de contingencias
 if (!isset($_SESSION['generador_id_reportando'])) {
@@ -15,7 +16,41 @@ $accion = $_POST['accion'] ?? 'borrador'; // 'borrador' o 'confirmar'
 $fecha_reporte = date('Y-m-d');
 $persona_reporta = $_SESSION['usuario_id'];
 
+// ✅ Crear controlador de revisiones
+$revisionController = new RevisionesController($conn);
+
 try {
+    // ✅ VALIDACIÓN DE INTENTOS ANTES DE PROCESAR
+    $estado_actual = $revisionController->obtenerEstadoFormulario($generador_id, $anio, 'contingencias');
+    
+    error_log("=== PROCESANDO CONTINGENCIAS ===");
+    error_log("Generador ID: $generador_id, Año: $anio");
+    error_log("Estado actual del formulario contingencias: " . $estado_actual);
+    error_log("Acción solicitada: $accion");
+    error_log("Usuario ID: $persona_reporta");
+    
+    // Si el formulario está rechazado, validar intentos de corrección SOLO cuando se confirma
+    if ($estado_actual === 'rechazado' && $accion == 'confirmar') {
+        error_log("Formulario en estado RECHAZADO - Validando intentos...");
+        
+        // Verificar si puede reenviar correcciones
+        if (!$revisionController->puedeReenviarCorreccion($generador_id, $anio)) {
+            $infoIntentos = $revisionController->obtenerInfoIntentos($generador_id, $anio);
+            
+            // ✅ CORREGIDO: Definir el límite manualmente
+            $limite_intentos = 2; // Cambia a 1 o 2 según necesites
+            $mensaje_error = "Has alcanzado el número máximo de intentos de corrección permitidos. " .
+                           "(" . $infoIntentos['intentos_correccion'] . " de " . $limite_intentos . " intento(s) utilizado(s))";
+            
+            error_log("VALIDACIÓN FALLIDA: " . $mensaje_error);
+            $_SESSION['error'] = $mensaje_error;
+            header("Location: ../../vistas/generador/reporte_contingencias_view.php?id=" . $generador_id);
+            exit();
+        }
+        
+        error_log("✅ VALIDACIÓN EXITOSA: Intentos disponibles para corrección");
+    }
+    
     // Convertir arrays de acciones a JSON - MANEJO CORRECTO DE CHECKBOXES
     $incendios_acciones = isset($_POST['incendios_acciones']) ? $_POST['incendios_acciones'] : [];
     $agua_acciones = isset($_POST['agua_acciones']) ? $_POST['agua_acciones'] : [];
@@ -65,7 +100,7 @@ try {
     $recoleccion_acciones_json = !empty($recoleccion_acciones) ? json_encode($recoleccion_acciones) : '[]';
     $operativas_acciones_json = !empty($operativas_acciones) ? json_encode($operativas_acciones) : '[]';
     
-    // ===== LÓGICA SIMPLIFICADA PARA EL ESTADO =====
+    // Determinar el estado según la acción
     $estado = ($accion == 'confirmar') ? 'confirmado' : 'borrador';
     
     // Iniciar transacción para asegurar consistencia entre ambas tablas
@@ -176,136 +211,114 @@ try {
             ]);
         }
         
-        // ===== ACTUALIZAR REVISIONES_ANUALES - SOLUCIÓN MEJORADA =====
-        // Primero obtener el estado actual del formulario_mensual
-        $stmt_check_mensual = $conn->prepare("SELECT formulario_mensual FROM revisiones_anuales WHERE generador_id = ? AND anio = ?");
-        $stmt_check_mensual->execute([$generador_id, $anio]);
-        $estado_mensual_actual = $stmt_check_mensual->fetch(PDO::FETCH_COLUMN);
-
-        // Si no existe el registro o el estado es nulo, usar 'pendiente' como valor por defecto
-        $nuevo_estado_mensual = $estado_mensual_actual ? $estado_mensual_actual : 'pendiente';
-
-        // SOLO ACTUALIZAR - preservar el estado del formulario_mensual
-        $stmt_update = $conn->prepare("UPDATE revisiones_anuales SET 
-            formulario_contingencias = 'pendiente',
-            formulario_mensual = ?,
-            estado_general = 'pendiente',
-            fecha_revision = NULL,
-            revisado_por = NULL,
-            observaciones_contingencias = NULL
-            WHERE generador_id = ? AND anio = ?");
+        // ✅ ACTUALIZAR ESTADO EN REVISIONES_ANUALES
+        if ($accion == 'confirmar') {
+            // Verificar si existe registro en revisiones_anuales
+            $stmt_check_revision = $conn->prepare("SELECT generador_id FROM revisiones_anuales WHERE generador_id = ? AND anio = ?");
+            $stmt_check_revision->execute([$generador_id, $anio]);
+            $existe_revision = $stmt_check_revision->fetch(PDO::FETCH_ASSOC);
             
-        $stmt_update->execute([$nuevo_estado_mensual, $generador_id, $anio]);
+            if ($existe_revision) {
+                // Actualizar estado del formulario de contingencias a "pendiente"
+                $stmt_update = $conn->prepare("UPDATE revisiones_anuales SET 
+                    formulario_contingencias = 'pendiente',
+                    fecha_revision = NULL,
+                    revisado_por = NULL,
+                    observaciones_contingencias = NULL
+                    WHERE generador_id = ? AND anio = ?");
+                
+                $stmt_update->execute([$generador_id, $anio]);
+            } else {
+                // Insertar nuevo registro en revisiones_anuales
+                $stmt_insert = $conn->prepare("INSERT INTO revisiones_anuales 
+                    (generador_id, anio, formulario_contingencias, estado_general)
+                    VALUES (?, ?, 'pendiente', 'incompleto')");
+                
+                $stmt_insert->execute([$generador_id, $anio]);
+            }
+        } else {
+            // Para borrador, solo asegurarnos que existe registro en revisiones_anuales
+            $stmt_check_revision = $conn->prepare("SELECT COUNT(*) FROM revisiones_anuales WHERE generador_id = ? AND anio = ?");
+            $stmt_check_revision->execute([$generador_id, $anio]);
+            $existe_revision = $stmt_check_revision->fetchColumn();
+            
+            if (!$existe_revision) {
+                $stmt_insert = $conn->prepare("INSERT INTO revisiones_anuales 
+                    (generador_id, anio, formulario_contingencias, estado_general)
+                    VALUES (?, ?, 'sin_datos', 'incompleto')");
+                $stmt_insert->execute([$generador_id, $anio]);
+            }
+        }
+        
+        // ✅ Log del procesamiento exitoso
+        error_log("PROCESAMIENTO EXITOSO - Contingencias guardadas para generador: $generador_id, año: $anio, acción: $accion");
+        if ($estado_actual === 'rechazado' && $accion == 'confirmar') {
+            error_log("CORRECCIÓN ENVIADA - Se procesó corrección del formulario de contingencias");
+        }
         
         // Confirmar transacción
         $conn->commit();
-        
-        // Enviar correo solo si se confirma definitivamente
+        // ✅ ENVIAR CORREO DE CONFIRMACIÓN AL USUARIO
         if ($accion == 'confirmar') {
-            // Enviar correo de notificación
-            $stmt_usuario = $conn->prepare("SELECT u.email, g.nom_responsable, g.nom_generador 
-                                       FROM usuarios u 
-                                       JOIN usuario_generador ug ON ug.usuario_id = u.id
-                                       JOIN generador g ON g.id = ug.generador_id 
-                                       WHERE g.id = :generador_id and u.id = :usuario_id");
-            $stmt_usuario->bindParam(':generador_id', $generador_id);
-            $stmt_usuario->bindParam(':usuario_id', $persona_reporta);
-            $stmt_usuario->execute();
-            $info_usuario = $stmt_usuario->fetch(PDO::FETCH_ASSOC);
+            error_log("📧 ENVIANDO CORREO DE CONFIRMACIÓN AL USUARIO");
             
-            if ($info_usuario) {
-                $destinatario = $info_usuario['email'];
-                $nombre_usuario = $info_usuario['nom_responsable'];
-                $nombre_generador = $info_usuario['nom_generador'];
+            try {
+                // Incluir y usar el controlador de email
+                require_once __DIR__ . '/../admin/email_controller.php';
+                $emailController = new EmailController($conn);
                 
-                // Configurar y enviar el correo
-                $mail = configurarMailer();
-                $mail->addAddress($destinatario);
-
-                // Codificar correctamente el asunto con tildes y caracteres especiales
-                $asunto = 'Confirmación de Reporte Completo - Sistema de Gestión de Residuos';
-                $mail->Subject = mb_encode_mimeheader($asunto, 'UTF-8', 'Q');
+                // Enviar confirmación de recepción al usuario
+                $enviado = $emailController->enviarConfirmacionRecepcion($generador_id, $anio, $persona_reporta);
                 
-                // Cuerpo del mensaje en HTML
-                $mail->Body = "
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset='UTF-8'>
-                    <title>Confirmación de Reporte</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                        .header { background-color: #2c3e50; color: white; padding: 20px; text-align: center; }
-                        .content { background-color: #f9f9f9; padding: 20px; border-radius: 5px; }
-                        .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #777; }
-                    </style>
-                </head>
-                <body>
-                    <div class='container'>
-                        <div class='header'>
-                            <h1>Sistema de Gestión de Residuos</h1>
-                        </div>
-                        <div class='content'>
-                            <h2>Confirmación de Recepción</h2>
-                            <p>Estimado(a) <strong>$nombre_usuario</strong>,</p>
-                            <p>Hemos recibido exitosamente todos sus reportes para el generador <strong>$nombre_generador</strong> correspondiente al año <strong>$anio</strong>.</p>
-                            <p>Los siguientes formularios han sido completados y confirmados:</p>
-                            <ul>
-                                <li>Reporte Mensual de Residuos</li>
-                                <li>Información Adicional y Capacitaciones</li>
-                                <li>Plan de Contingencias</li>
-                            </ul>
-                            <p>El reporte completo ha sido registrado en nuestro sistema y se encuentra en estado: <strong>Pendiente de revisión</strong>.</p>
-                            <p>Recibirá una notificación una vez que el técnico asignado haya revisado la información.</p>
-                            <p>Gracias por utilizar nuestro sistema.</p>
-                        </div>
-                        <div class='footer'>
-                            <p>Este es un mensaje automático, por favor no responda a este correo.</p>
-                            <p>&copy; " . date('Y') . " Sistema de Gestión de Residuos. Todos los derechos reservados.</p>
-                        </div>
-                    </div>
-                </body>
-                </html>
-                ";
-                
-                // Versión alternativa en texto plano
-                $mail->AltBody = "Confirmación de Reporte Completo\n\n" .
-                                "Estimado(a) $nombre_usuario,\n\n" .
-                                "Hemos recibido exitosamente todos sus reportes para el generador $nombre_generador correspondiente al año $anio.\n\n" .
-                                "Los siguientes formularios han sido completados:\n" .
-                                "- Reporte Mensual de Residuos\n" .
-                                "- Información Adicional y Capacitaciones\n" .
-                                "- Plan de Contingencias\n\n" .
-                                "El reporte completo ha sido registrado en nuestro sistema y se encuentra en estado: Pendiente de revisión.\n\n" .
-                                "Recibirá una notificación una vez que el técnico asignado haya revisado la información.\n\n" .
-                                "Gracias por utilizar nuestro sistema.\n\n" .
-                                "Este es un mensaje automático, por favor no responda a este correo.";
-                
-                // Intentar enviar el correo
-                if ($mail->send()) {
-                    error_log("Correo de confirmación enviado a: " . $destinatario);
+                if ($enviado) {
+                    error_log("✅ Correo de confirmación enviado exitosamente al usuario");
                 } else {
-                    error_log("Error al enviar correo de confirmación: " . $mail->ErrorInfo);
+                    error_log("⚠️ No se pudo enviar el correo de confirmación");
                 }
+                
+            } catch (Exception $e) {
+                error_log("❌ Error al enviar correo de confirmación: " . $e->getMessage());
+                // No interrumpir el flujo principal si falla el email
             }
+        }
+
+        if ($accion == 'confirmar') {
+            // Verificar si los tres formularios están completos
+            $stmt_check_completos = $conn->prepare("
+                SELECT 
+                    (SELECT COUNT(*) FROM cantidad_x_mes WHERE id_generador = ? AND anio = ?) as tiene_mensual,
+                    (SELECT COUNT(*) FROM reporte_anual_adicional WHERE generador_id = ? AND anio = ?) as tiene_adicional,
+                    (SELECT COUNT(*) FROM contingencias WHERE generador_id = ? AND anio = ? AND estado = 'confirmado') as tiene_contingencias
+            ");
+            $stmt_check_completos->execute([$generador_id, $anio, $generador_id, $anio, $generador_id, $anio]);
+            $formularios = $stmt_check_completos->fetch(PDO::FETCH_ASSOC);
             
-            // Limpiar sesión y redirigir
-            unset($_SESSION['generador_id_reportando']);
-            unset($_SESSION['anio_reportando']);
-            
-            $_SESSION['mensaje_exito'] = "¡Reporte confirmado exitosamente! Se ha enviado un correo de confirmación.";
-            header("Location: ../../vistas/generador/listado_generadores_view.php");
-            exit();
+            if ($formularios['tiene_mensual'] > 0 && $formularios['tiene_adicional'] > 0 && $formularios['tiene_contingencias'] > 0) {
+                // Los tres formularios están completos
+                $mensaje = "¡Los tres formularios han sido confirmados exitosamente! El reporte anual completo está pendiente de revisión.";
+                
+                // Limpiar sesión
+                unset($_SESSION['generador_id_reportando']);
+                unset($_SESSION['anio_reportando']);
+                
+                $_SESSION['mensaje_exito'] = $mensaje;
+                header("Location: ../../vistas/generador/listado_generadores_view.php");
+                exit();
+            } else {
+                // Solo este formulario está confirmado
+                $_SESSION['mensaje_exito'] = "¡Plan de Contingencias confirmado exitosamente!";
+                header("Location: ../../vistas/generador/reporte_contingencias_view.php?id=" . $generador_id);
+                exit();
+            }
         } else {
             // Guardar como borrador
             $_SESSION['mensaje_exito'] = "¡Borrador guardado exitosamente! Puede continuar editando posteriormente.";
-            header("Location: ../../vistas/generador/reporte_contingencias_view.php?id=".$generador_id);
+            header("Location: ../../vistas/generador/reporte_contingencias_view.php?id=" . $generador_id);
             exit();
         }
         
     } catch (Exception $e) {
-        // Revertir transacción en caso de error, solo si hay transacción activa
+        // Revertir transacción en caso de error
         if ($conn->inTransaction()) {
             $conn->rollBack();
         }
@@ -313,8 +326,9 @@ try {
     }
     
 } catch (Exception $e) {
+    error_log("ERROR en procesar_contingencias: " . $e->getMessage());
     $_SESSION['error'] = $e->getMessage();
-    header("Location: ../../vistas/generador/reporte_contingencias_view.php?id=".$generador_id);    
+    header("Location: ../../vistas/generador/reporte_contingencias_view.php?id=" . $generador_id);
     exit();
 }
 ?>

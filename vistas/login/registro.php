@@ -1,37 +1,31 @@
-<?php include '../../includes/header.php'; ?>
-<main class="auth-container d-flex justify-content-center align-items-center min-vh-70">
-    <div class="auth-card shadow p-4 mb-5 mt-5">
-        <h2 class = "auth-title">Registro de usuario</h2>
-    <?php if (isset($_GET['error'])): ?>
-        <div class = "alert alert-error">
-            <code><?php echo htmlspecialchars($_GET['error']); ?></code>
-        </div>
-    <?php endif; ?>
-        <form  class = "auth-form" id="registroForm" method="post" action="../../procesos/login/registrar.php" onsubmit="return validarFormulario()">
-            <div class = "form-group mb-3">
-                <label for="email">Correo electrónico:</label>
-                <input type="email" name="email" required placeholder="tu@mail.com">
+<?php
+require '../../includes/conexion.php';
+include '../../includes/header.php';
+?>
+
+<main class="auth-container d-flex justify-content-center align-items-center min-vh-70 mb-5 mt-5">
+    <div class="auth-card p-4 shadow">
+        <h2 class="auth-title">Crear Cuenta</h2>
+        
+        <?php if (isset($_GET['error'])): ?>
+            <div class="alert alert-error"><?php echo htmlspecialchars($_GET['error']); ?></div>
+        <?php endif; ?>
+        
+        <?php if (isset($_GET['success'])): ?>
+            <div class="alert alert-success"><?php echo htmlspecialchars($_GET['success']); ?></div>
+        <?php endif; ?>
+        
+        <form method="post" action="../../procesos/login/procesar_registro_paso1.php">
+            <div class="form-group mb-3">
+                <label for="email">Correo Electrónico:</label>
+                <input type="email" id="email" name="email" required placeholder="tu@mail.com">
             </div>
-            
-            <div class = "form-group mb-3">
-                <label>Contraseña (mínimo 6 caracteres):</label>
-                <input type="password" name="password" id="password" required minlength="6" placeholder="••••••••">
-            </div>
-            
-            <div class = "form-group mb-3">
-                <label>Confirmar Contraseña:</label>
-                <input type="password" name="confirm_password" id="confirm_password" required placeholder="••••••••">
-                <span id="mensajeError" style="color:red;"></span>
-            </div>
-            <div class = "form-actions d-flex flex-column align-items-center">
-                <button type="submit">Registrarse</button>
+            <div class="form-actions d-flex flex-column align-items-center">
+                <button type="submit" class="btn btn-primary">Verificar correo</button>
                 <a href="login.php" class="auth-link">¿Ya tienes cuenta? Inicia sesión</a>
             </div>
         </form>
     </div>
 </main>
 
-
-<!-- Incluir JavaScript externo -->
-<script src="../../assets/js/validacion-registro.js"></script>
 <?php include '../../includes/footer.php'; ?>

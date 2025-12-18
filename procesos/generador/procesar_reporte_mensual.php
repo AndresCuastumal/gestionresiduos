@@ -2,20 +2,52 @@
 session_start();
 require_once '../../includes/conexion.php';
 require_once 'reporte_mensual_controller.php';
+// ✅ SOLO incluir revisiones_controller para validación
+require_once '../admin/revisiones_controller.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['id'])) {
     $generador_id = $_GET['id'];
     $controller = new ReporteMensualController($conn);
+    // ✅ Solo controlador de revisiones para validación
+    $revisionController = new RevisionesController($conn);
     
     try {
-        // ✅ AGREGAR LOGS PARA DEBUG
         error_log("=== INICIANDO PROCESO REPORTE MENSUAL ===");
         error_log("Generador ID: $generador_id");
         error_log("Año: " . ($_POST['anio'] ?? 'NO RECIBIDO'));
         
+        // ✅ VALIDACIÓN DE INTENTOS ANTES DE PROCESAR
+        $anio = $_POST['anio'];
+        $estado_actual = $revisionController->obtenerEstadoFormulario($generador_id, $anio, 'mensual');
+        
+        error_log("Estado actual del formulario mensual: " . $estado_actual);
+        
+        // Si el formulario está rechazado, validar intentos de corrección
+        if ($estado_actual === 'rechazado') {
+            error_log("Formulario en estado RECHAZADO - Validando intentos...");
+            
+            // Verificar si puede reenviar correcciones
+            if (!$revisionController->puedeReenviarCorreccion($generador_id, $anio)) {
+                $infoIntentos = $revisionController->obtenerInfoIntentos($generador_id, $anio);
+                
+                // ✅ CORREGIDO: No usar 'max_intentos_permitidos' que no existe
+                // Definir el límite manualmente según tu configuración
+                $limite_intentos = 1; // Cambia a 1 o 2 según necesites
+                $mensaje_error = "Has alcanzado el número máximo de intentos de corrección permitidos. " .
+                               "(" . $infoIntentos['intentos_correccion'] . " de " . $limite_intentos . " intento(s) utilizado(s))";
+                
+                error_log("VALIDACIÓN FALLIDA: " . $mensaje_error);
+                $_SESSION['error'] = $mensaje_error;
+                header("Location: ../../vistas/generador/reporte_mensual_view.php?id=" . $generador_id);
+                exit();
+            }
+            
+            error_log("✅ VALIDACIÓN EXITOSA: Intentos disponibles");
+            // ✅ NO INCREMENTAR AQUÍ - Se hará cuando se envíe el correo de rechazo
+        }
+        
         // Verificar si se subió un archivo
         $archivo_subido = false;
-        $nombre_archivo = null;
         
         if (isset($_FILES['soporte_pdf']) && $_FILES['soporte_pdf']['error'] === UPLOAD_ERR_OK) {
             $archivo_subido = true;
@@ -24,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['id'])) {
             error_log("No se recibió archivo PDF o hay error: " . ($_FILES['soporte_pdf']['error'] ?? 'NO FILE'));
         }
         
-        // ✅ LLAMAR A LA FUNCIÓN ANTES DE PROCESAR (IMPORTANTE)
+        // ✅ LLAMAR A LA FUNCIÓN ANTES DE PROCESAR
         actualizarEstadoRevisionAnual($conn, $generador_id, $_POST['anio']);
         
         // Guardar en sesión para el siguiente formulario
@@ -35,9 +67,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['id'])) {
         $resultado = $controller->procesarReporte($generador_id, $_POST, $archivo_subido ? $_FILES['soporte_pdf'] : null);
         
         error_log("Procesamiento completado: " . ($resultado ? 'ÉXITO' : 'FALLÓ'));
+        
+        // ✅ Preparar mensaje según el tipo de envío (SIN REFERENCIA A CORREO)
+        $mensaje_exito = "Reporte mensual guardado exitosamente";
+        if ($estado_actual === 'rechazado') {
+            $mensaje_exito = "Correcciones del reporte mensual guardadas y enviadas para revisión";
+            
+            // ✅ OPCIONAL: Log de corrección
+            error_log("Corrección enviada - Generador: $generador_id, Año: $anio");
+        }
                        
         // Redirigir al segundo formulario
-        $_SESSION['mensaje_exito'] = "Reporte mensual guardado exitosamente";
+        $_SESSION['mensaje_exito'] = $mensaje_exito;
         header("Location: ../../vistas/generador/reporte_adicional_view.php?id=" . $generador_id);
         exit();
         

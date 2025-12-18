@@ -26,7 +26,7 @@ class EmailController {
             $mail->Port = 587;
             
             // Configuración del remitente
-            $mail->setFrom('reportegestionresiduos@gmail.com', 'Sistema de Reporte de Gestión de Residuos  en atención en Salud y otras Actividades- Secretaría de Salud Pasto');
+            $mail->setFrom('reportegestionresiduos@gmail.com', 'Sistema de Reporte de Gestión de Residuos en atención en Salud y otras Actividades - Secretaría de Salud Pasto');
             $mail->CharSet = 'UTF-8';
             $mail->Encoding = 'base64';
             $mail->isHTML(true);
@@ -39,9 +39,73 @@ class EmailController {
         }
     }
     
-    // Enviar certificado de aprobación con PDF adjunto
+    // ========== MÉTODO NUEVO: ENVIAR CONFIRMACIÓN DE RECEPCIÓN ==========
+    
+    /**
+     * Enviar correo de confirmación de recepción cuando el usuario completa los 3 formularios
+     */
+    public function enviarConfirmacionRecepcion($generador_id, $anio, $usuario_id) {
+        error_log("📧 Preparando envío de confirmación de recepción para generador_id: $generador_id");
+        
+        // ✅ CONSULTA CORREGIDA - Usar solo datos del generador
+        $stmt = $this->conn->prepare("
+            SELECT g.nom_generador, g.nom_responsable, g.nit, 
+                u.email as email_responsable
+            FROM generador g
+            JOIN usuario_generador ug ON g.id = ug.generador_id
+            JOIN usuarios u ON ug.usuario_id = u.id            
+            WHERE g.id = ? AND u.id = ?
+        ");
+        
+        $stmt->execute([$generador_id, $usuario_id]);
+        $datos = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$datos || empty($datos['email_responsable'])) {
+            error_log("❌ No se encontró email para el generador $generador_id y usuario $usuario_id");
+            return false;
+        }
+        
+        $destinatario = $datos['email_responsable'];
+        // ✅ Usar el nombre del responsable del generador, ya que usuarios no tiene nombre
+        $nombre_destinatario = $datos['nom_responsable'] ?: $datos['nom_generador'];
+        
+        $mail = $this->configurarMailer();
+        if (!$mail) {
+            error_log("❌ Error al configurar PHPMailer");
+            return false;
+        }
+        
+        try {
+            // Configurar destinatario
+            $mail->addAddress($destinatario, $nombre_destinatario);
+            $mail->Subject = "✅ Confirmación de Recepción - Reporte Anual {$anio} - {$datos['nom_generador']}";
+            
+            // Crear contenido HTML del email
+            $mail->Body = $this->crearCuerpoEmailConfirmacion($datos, $anio);
+            $mail->AltBody = $this->crearCuerpoTextoConfirmacion($datos, $anio);
+            
+            // Enviar email
+            $mail->send();
+            error_log("✅ Email de confirmación enviado exitosamente a: $destinatario");
+            
+            // Guardar registro del envío
+            $this->guardarRegistroEmail($generador_id, $anio, 'confirmacion_recepcion', $destinatario);
+            
+            return true;
+            
+        } catch (Exception $e) {
+            error_log("❌ Error enviando email de confirmación: " . $mail->ErrorInfo);
+            return false;
+        }
+    }
+    
+    // ========== MÉTODOS EXISTENTES (MANTENIDOS) ==========
+    
+    /**
+     * Enviar certificado de aprobación con PDF adjunto
+     */
     public function enviarCertificadoAprobacion($generador_id, $anio, $ruta_pdf) {
-        error_log("📧 Preparando envío REAL de certificado para generador_id: $generador_id");
+        error_log("📧 Preparando envío de certificado para generador_id: $generador_id");
         
         // Obtener datos del generador
         $stmt = $this->conn->prepare("
@@ -87,7 +151,7 @@ class EmailController {
             
             // Enviar email
             $mail->send();
-            error_log("✅ Email REAL enviado exitosamente a: $destinatario");
+            error_log("✅ Email de certificado enviado exitosamente a: $destinatario");
             
             // Guardar registro del envío
             $this->guardarRegistroEmail($generador_id, $anio, 'aprobacion', $destinatario);
@@ -95,14 +159,16 @@ class EmailController {
             return true;
             
         } catch (Exception $e) {
-            error_log("❌ Error enviando email REAL: " . $mail->ErrorInfo);
+            error_log("❌ Error enviando email de certificado: " . $mail->ErrorInfo);
             return false;
         }
     }
     
-    // Enviar notificación de rechazo con observaciones
+    /**
+     * Enviar notificación de rechazo con observaciones
+     */
     public function enviarNotificacionRechazo($generador_id, $anio, $observaciones) {
-        error_log("📧 Preparando envío REAL de notificación de rechazo para generador_id: $generador_id");
+        error_log("📧 Preparando envío de notificación de rechazo para generador_id: $generador_id");
         
         // Obtener datos del generador
         $stmt = $this->conn->prepare("
@@ -140,7 +206,7 @@ class EmailController {
             
             // Enviar email
             $mail->send();
-            error_log("✅ Email REAL de rechazo enviado exitosamente a: $destinatario");
+            error_log("✅ Email de rechazo enviado exitosamente a: $destinatario");
             
             // Guardar registro del envío
             $this->guardarRegistroEmail($generador_id, $anio, 'rechazo', $destinatario);
@@ -148,12 +214,140 @@ class EmailController {
             return true;
             
         } catch (Exception $e) {
-            error_log("❌ Error enviando email de rechazo REAL: " . $mail->ErrorInfo);
+            error_log("❌ Error enviando email de rechazo: " . $mail->ErrorInfo);
             return false;
         }
     }
     
-    // Crear cuerpo HTML para email de aprobación
+    // ========== MÉTODOS PARA CREAR CUERPOS DE EMAIL ==========
+    
+    /**
+     * Crear cuerpo HTML para email de confirmación de recepción
+     */
+    private function crearCuerpoEmailConfirmacion($datos, $anio) {
+        $fecha = date('d/m/Y');
+        
+        return "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='UTF-8'>
+            <title>Confirmación de Recepción</title>
+            <style>
+                body { 
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                    line-height: 1.6; 
+                    color: #333; 
+                    max-width: 600px; 
+                    margin: 0 auto; 
+                    padding: 20px;
+                    background-color: #f9f9f9;
+                }
+                .container {
+                    background: white;
+                    padding: 30px;
+                    border-radius: 10px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                }
+                .header {
+                    text-align: center;
+                    background: linear-gradient(135deg, #3498db, #2980b9);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 10px 10px 0 0;
+                    margin: -30px -30px 30px -30px;
+                }
+                .header h1 {
+                    margin: 0;
+                    font-size: 24px;
+                }
+                .content {
+                    padding: 20px 0;
+                }
+                .datos-generador {
+                    background: #f8f9fa;
+                    padding: 20px;
+                    border-left: 4px solid #3498db;
+                    margin: 20px 0;
+                    border-radius: 5px;
+                }
+                .footer {
+                    text-align: center;
+                    margin-top: 30px;
+                    padding-top: 20px;
+                    border-top: 1px solid #ddd;
+                    color: #666;
+                    font-size: 12px;
+                }
+                .checklist {
+                    margin: 20px 0;
+                }
+                .checklist li {
+                    margin: 10px 0;
+                    padding-left: 30px;
+                    position: relative;
+                }
+                .checklist li:before {
+                    content: '✅';
+                    position: absolute;
+                    left: 0;
+                }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1>✅ Confirmación de Recepción</h1>
+                    <p>Reporte Anual de Gestión de Residuos Peligrosos - {$anio}</p>
+                </div>
+                
+                <div class='content'>
+                    <p>Estimado(a) <strong>{$datos['nom_responsable']}</strong>,</p>
+                    
+                    <p>Hemos recibido exitosamente <strong>TODOS SUS REPORTES</strong> para el generador 
+                    <strong>{$datos['nom_generador']}</strong> (NIT: {$datos['nit']}) correspondientes al año {$anio}.</p>
+                    
+                    <div class='datos-generador'>
+                        <h3>📋 Formularios Completados y Confirmados:</h3>
+                        <ul class='checklist'>
+                            <li>Reporte Mensual de Residuos</li>
+                            <li>Información Adicional y Capacitaciones</li>
+                            <li>Plan de Contingencias</li>
+                        </ul>
+                        <p><strong>Fecha de recepción:</strong> {$fecha}</p>
+                        <p><strong>Estado actual:</strong> Pendiente de revisión</p>
+                    </div>
+                    
+                    <p><strong>📌 Proceso de Revisión:</strong></p>
+                    <ol>
+                        <li>Su reporte ha sido registrado en nuestro sistema</li>
+                        <li>Será asignado a un técnico para revisión</li>
+                        <li>Recibirá una notificación cuando se complete la revisión</li>
+                        <li>Si se requieren correcciones, se le notificará por este mismo medio</li>
+                    </ol>
+                    
+                    <p>Puede verificar el estado de su reporte ingresando al sistema en cualquier momento.</p>
+                    
+                    <p><strong>⚠️ Importante:</strong> Este correo es solo una confirmación de recepción. 
+                    La revisión técnica se realizará posteriormente y podría requerir ajustes.</p>
+                </div>
+                
+                <div class='footer'>
+                    <p><strong>Secretaría de Salud de Pasto</strong><br>
+                    Sistema de Reporte de Gestión de Residuos Generados en Atención en Salud y Otras Actividades</p>
+                    <p>📍 Pasto, Nariño, Colombia<br>                    
+                    ✉️ reportegestionresiduos@gmail.com</p>
+                    <p><em>Este es un mensaje automático, por favor no responda a este correo.</em></p>
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+    }
+    
+    /**
+     * Crear cuerpo HTML para email de aprobación
+     */
     private function crearCuerpoEmailAprobacion($datos, $anio) {
         $fecha = date('d/m/Y');
         
@@ -272,7 +466,9 @@ class EmailController {
         ";
     }
     
-    // Crear cuerpo HTML para email de rechazo
+    /**
+     * Crear cuerpo HTML para email de rechazo
+     */
     private function crearCuerpoEmailRechazo($datos, $anio, $observaciones) {
         $fecha = date('d/m/Y');
         
@@ -350,7 +546,7 @@ class EmailController {
             <div class='container'>
                 <div class='header'>
                     <h1>⚠️ Correcciones Requeridas</h1>
-                    <p>Reporte Anual de Gestión de Residuos Peligrosos - {$anio}</p>
+                    <p>Reporte de Gestión Integral de Residuos Generados en la Atención en Salud y Otras Actividades - {$anio}</p>
                 </div>
                 
                 <div class='content'>
@@ -381,7 +577,7 @@ class EmailController {
                     </ol>
                     
                     <p style='text-align: center;'>
-                        <a href='http://192.168.20.122/reportegestionresiduos' class='btn'>
+                        <a href='http://192.168.20.7/reportegestionresiduos' class='btn'>
                             📊 Ingresar al Sistema
                         </a>
                     </p>
@@ -389,7 +585,7 @@ class EmailController {
                 
                 <div class='footer'>
                     <p><strong>Secretaría de Salud de Pasto</strong><br>
-                    Sistema de Gestión de Residuos Generados e Ateción en Salud  y Otras Actividades</p>                    
+                    Sistema de Gestión de Residuos Generados en Ateción en Salud  y Otras Actividades</p>                    
                     <p><em>Este es un mensaje automático, por favor no responda a este correo.</em></p>
                 </div>
             </div>
@@ -398,7 +594,43 @@ class EmailController {
         ";
     }
     
-    // Crear versión texto plano para email de aprobación
+    // ========== MÉTODOS PARA VERSIÓN TEXTO PLANO ==========
+    
+    /**
+     * Crear versión texto plano para email de confirmación
+     */
+    private function crearCuerpoTextoConfirmacion($datos, $anio) {
+        $fecha = date('d/m/Y');
+        
+        return "CONFIRMACION DE RECEPCION - REPORTE ANUAL {$anio}
+
+Estimado(a) {$datos['nom_responsable']},
+
+Hemos recibido exitosamente TODOS SUS REPORTES para el generador 
+{$datos['nom_generador']} (NIT: {$datos['nit']}) correspondientes al año {$anio}.
+
+FORMULARIOS COMPLETADOS Y CONFIRMADOS:
+✅ Reporte Mensual de Residuos
+✅ Información Adicional y Capacitaciones  
+✅ Plan de Contingencias
+
+Fecha de recepción: {$fecha}
+Estado actual: Pendiente de revisión
+
+Su reporte ha sido registrado en nuestro sistema y será asignado a un técnico 
+para revisión. Recibirá una notificación cuando se complete la revisión.
+
+Este correo es solo una confirmación de recepción. La revisión técnica se 
+realizará posteriormente y podría requerir ajustes.
+
+Secretaría de Salud de Pasto
+Sistema de Gestión de Residuos Peligrosos
+Este es un mensaje automático, por favor no responda.";
+    }
+    
+    /**
+     * Crear versión texto plano para email de aprobación
+     */
     private function crearCuerpoTextoAprobacion($datos, $anio) {
         $fecha = date('d/m/Y');
         
@@ -423,7 +655,9 @@ Sistema de Gestión de Residuos Peligrosos
 Este es un mensaje automático, por favor no responda.";
     }
     
-    // Crear versión texto plano para email de rechazo
+    /**
+     * Crear versión texto plano para email de rechazo
+     */
     private function crearCuerpoTextoRechazo($datos, $anio, $observaciones) {
         $fecha = date('d/m/Y');
         
@@ -450,18 +684,36 @@ Sistema de Gestión de Residuos Peligrosos
 Este es un mensaje automático, por favor no responda.";
     }
     
-    // Guardar registro del envío de email en la base de datos
+    // ========== MÉTODO PARA REGISTRAR ENVÍOS ==========
+    
+    /**
+     * Guardar registro del envío de email en la base de datos
+     */
     private function guardarRegistroEmail($generador_id, $anio, $tipo, $destinatario) {
         try {
+            // ✅ ACORTAR EL TIPO DE EMAIL PARA QUE QUEPA EN EL CAMPO
+            $tipos_validos = [
+                'confirmacion_recepcion' => 'confirmacion',
+                'aprobacion' => 'aprobacion',
+                'rechazo' => 'rechazo'
+            ];
+            
+            $tipo_corto = $tipos_validos[$tipo] ?? substr($tipo, 0, 20);
+            
+            error_log("📝 Guardando registro de email - Tipo: $tipo (acortado a: $tipo_corto)");
+            
             $stmt = $this->conn->prepare("
                 INSERT INTO logs_emails 
                 (generador_id, anio, tipo_email, destinatario, fecha_envio)
                 VALUES (?, ?, ?, ?, NOW())
             ");
-            $stmt->execute([$generador_id, $anio, $tipo, $destinatario]);
+            
+            $stmt->execute([$generador_id, $anio, $tipo_corto, $destinatario]);
             error_log("✅ Registro de email guardado en base de datos");
+            
         } catch (Exception $e) {
             error_log("⚠️ Error guardando registro de email: " . $e->getMessage());
+            // ⚠️ IMPORTANTE: No lanzar excepción para no interrumpir el envío del email
         }
     }
 }

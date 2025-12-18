@@ -10,6 +10,9 @@ class GeneradoresController {
 
     public function __construct($conn) {
         $this->conn = $conn;
+        // ✅ NUEVO: Crear instancia del controlador de revisiones
+        require_once '../../procesos/admin/revisiones_controller.php';
+        $this->revisionesController = new RevisionesController($conn);
     }
 
     public function verificarSesion() {
@@ -186,6 +189,202 @@ class GeneradoresController {
         } catch (PDOException $e) {
             error_log("Error al obtener certificado PDF: " . $e->getMessage());
             return null;
+        }
+    }
+    /**
+     * Verificar si el generador puede corregir formularios rechazados
+     */
+    public function puedeCorregirFormularios($generador_id) {
+        try {
+            $anio_actual = date('Y') - 1; // Año anterior
+            error_log("🔍 Verificando puedeCorregirFormularios para generador_id: $generador_id, año: $anio_actual");
+            
+            // 1. Verificar si hay revisión para este año
+            $stmt = $this->conn->prepare("
+                SELECT ra.*, COUNT(*) as intentos_restantes
+                FROM revisiones_anuales ra
+                WHERE ra.generador_id = ? AND ra.anio = ?
+            ");
+            $stmt->execute([$generador_id, $anio_actual]);
+            $revision = $stmt->fetch(PDO::FETCH_ASSOC);
+            error_log("🔍 Resultado de consulta revisión: " . ($revision ? 'ENCONTRADO' : 'NO ENCONTRADO'));
+
+            if (!$revision) {
+                error_log("❌ No hay revisión para este año");
+                return false; // No hay revisión para este año
+            }
+            
+            // 2. Verificar que todos los formularios estén revisados
+            $todosRevisados = (
+                $revision['formulario_mensual'] !== 'pendiente' && 
+                $revision['formulario_mensual'] !== 'sin_datos' &&
+                $revision['formulario_accidentes'] !== 'pendiente' && 
+                $revision['formulario_accidentes'] !== 'sin_datos' &&
+                $revision['formulario_contingencias'] !== 'pendiente' && 
+                $revision['formulario_contingencias'] !== 'sin_datos'
+            );
+            error_log("🔍 ¿Todos revisados?: " . ($todosRevisados ? 'SÍ' : 'NO'));
+
+            if (!$todosRevisados) {
+                error_log("❌ Aún no se han revisado todos los formularios");
+                return false; // Aún no se han revisado todos los formularios
+            }
+            
+            // 3. Verificar que el estado general sea "rechazado"
+            error_log("🔍 Estado general: " . ($revision['estado_general'] ?? 'NO DEFINIDO'));
+            if ($revision['estado_general'] !== 'rechazado') {
+                error_log("❌ Estado general NO es 'rechazado'");
+                return false; // No hay rechazos que corregir
+            }
+            
+            // 4. Verificar que no haya excedido los intentos
+            error_log("🔍 Intentos: " . ($revision['intentos_correccion'] ?? 0) . "/" . ($revision['max_intentos_permitidos'] ?? 1));
+            if ($revision['intentos_correccion'] >= $revision['max_intentos_permitidos']) {
+                error_log("❌ Ya excedió los intentos permitidos");
+                return false; // Ya usó todos los intentos
+            }
+            
+            // 5. Verificar que no esté finalizado
+             error_log("🔍 ¿Está finalizado?: " . ($revision['estado_finalizado'] == 1 ? 'SÍ' : 'NO'));
+            if ($revision['estado_finalizado'] == 1) {
+                error_log("❌ Ya está finalizado");
+                return false; // Ya está finalizado
+            }
+            error_log("✅ PUEDE corregir - todas las verificaciones pasaron");
+            return true;
+            
+        } catch (PDOException $e) {
+            error_log("❌ ERROR en puedeCorregirFormularios: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Obtener información detallada de la revisión para mostrar al usuario
+     */
+    public function obtenerInfoRechazos($generador_id) {
+        try {
+            $anio_actual = date('Y') - 1;
+            
+            $stmt = $this->conn->prepare("
+                SELECT 
+                    formulario_mensual,
+                    formulario_accidentes,
+                    formulario_contingencias,
+                    estado_general,
+                    intentos_correccion,
+                    max_intentos_permitidos,
+                    fecha_ultimo_rechazo,
+                    observaciones_mensual,
+                    observaciones_accidentes,
+                    observaciones_contingencias
+                FROM revisiones_anuales 
+                WHERE generador_id = ? AND anio = ?
+            ");
+            $stmt->execute([$generador_id, $anio_actual]);
+            $revision = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$revision) {
+                return null;
+            }
+            
+            // Determinar qué formularios están rechazados
+            $formularios_rechazados = [];
+            
+            if ($revision['formulario_mensual'] === 'rechazado') {
+                $formularios_rechazados[] = [
+                    'tipo' => 'mensual',
+                    'nombre' => 'Reporte Mensual',
+                    'observaciones' => $revision['observaciones_mensual']
+                ];
+            }
+            
+            if ($revision['formulario_accidentes'] === 'rechazado') {
+                $formularios_rechazados[] = [
+                    'tipo' => 'accidentes',
+                    'nombre' => 'Capacitaciones y Accidentes',
+                    'observaciones' => $revision['observaciones_accidentes']
+                ];
+            }
+            
+            if ($revision['formulario_contingencias'] === 'rechazado') {
+                $formularios_rechazados[] = [
+                    'tipo' => 'contingencias',
+                    'nombre' => 'Plan de Contingencias',
+                    'observaciones' => $revision['observaciones_contingencias']
+                ];
+            }
+            
+            return [
+                'revision' => $revision,
+                'formularios_rechazados' => $formularios_rechazados,
+                'puede_corregir' => $this->puedeCorregirFormularios($generador_id)
+            ];
+            
+        } catch (PDOException $e) {
+            error_log("Error al obtener info de rechazos: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Reenviar formularios para corrección
+     */
+    public function reenviarParaCorreccion($generador_id) {
+        try {
+            $anio_actual = date('Y') - 1;
+            
+            error_log("🔧 INICIANDO reenviarParaCorreccion()");
+            error_log("🔧 generador_id: $generador_id, año: $anio_actual");
+
+            // Verificar que puede corregir
+            if (!$this->puedeCorregirFormularios($generador_id)) {
+                error_log("❌ NO puede corregir - permiso denegado");
+                return ['success' => false, 'message' => 'No tiene permiso para corregir'];
+            }
+
+            error_log("✅ PUEDE corregir - procediendo...");
+            
+            // ✅ CORRECCIÓN: Usar el método del controlador de revisiones
+            // Este método YA existe en RevisionesController
+            $incrementado = $this->revisionesController->incrementarIntentoCorreccion($generador_id, $anio_actual);
+             error_log("🔧 Resultado de incrementarIntentoCorreccion: " . ($incrementado ? 'TRUE' : 'FALSE'));
+
+            if (!$incrementado) {
+                return ['success' => false, 'message' => 'Error al incrementar intentos'];
+            }
+            
+            // 2. Cambiar formularios rechazados a "pendiente"
+            $revision = $this->obtenerInfoRechazos($generador_id);
+            
+            if ($revision && !empty($revision['formularios_rechazados'])) {
+                $updates = [];
+                $params = [];
+                
+                foreach ($revision['formularios_rechazados'] as $formulario) {
+                    $campo = "formulario_{$formulario['tipo']}";
+                    $updates[] = "$campo = 'pendiente'";
+                }
+                
+                if (!empty($updates)) {
+                    $sql = "UPDATE revisiones_anuales SET " . implode(", ", $updates);
+                    $sql .= ", estado_general = 'pendiente'";
+                    $sql .= ", fecha_revision = NULL";
+                    $sql .= " WHERE generador_id = ? AND anio = ?";
+                    
+                    $params[] = $generador_id;
+                    $params[] = $anio_actual;
+                    
+                    $stmt = $this->conn->prepare($sql);
+                    $stmt->execute($params);
+                }
+            }
+            
+            return ['success' => true, 'message' => 'Correcciones enviadas correctamente'];
+            
+        } catch (PDOException $e) {
+            error_log("Error al reenviar correcciones: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Error al procesar correcciones'];
         }
     }
 }

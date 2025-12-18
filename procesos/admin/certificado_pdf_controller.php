@@ -41,9 +41,10 @@ class CertificadoPdfController {
             $options = new Options();
             $options->set('isHtml5ParserEnabled', true);
             $options->set('isRemoteEnabled', true);
-            $options->set('defaultFont', 'Arial');
+            $options->set('defaultFont', 'helvetica');
             $options->set('isPhpEnabled', true);
-            
+            $options->set('isFontSubsettingEnabled', true); // IMPORTANTE: Reduce tamaño de fuentes
+            $options->set('dpi', 96); // Reducir DPI para menos detalle pero más compacto
             $dompdf = new Dompdf($options);
             
             // Crear contenido HTML para el PDF
@@ -101,8 +102,7 @@ class CertificadoPdfController {
         }
     }
     
-    // Generar HTML para el certificado (mejorado)
-    private function generarHtmlCertificado($generador, $anio) {
+        private function generarHtmlCertificado($generador, $anio) {
         $fecha_actual = date('d/m/Y');
         $fecha_revision = $generador['fecha_revision'] ? date('d/m/Y', strtotime($generador['fecha_revision'])) : $fecha_actual;
         
@@ -113,6 +113,17 @@ class CertificadoPdfController {
         $tipo_sujeto = htmlspecialchars($generador['nom_tipo'] ?? '');
         $responsable = htmlspecialchars($generador['nom_responsable'] ?? '');
         
+        // Obtener la imagen en base64
+        $logoPath = $_SERVER['DOCUMENT_ROOT'] . '/gestionresiduos/assets/css/logoNuevoSMS2024.png';
+        
+        if (file_exists($logoPath)) {
+            $logoData = base64_encode(file_get_contents($logoPath));
+            $logoBase64 = 'data:image/png;base64,' . $logoData;
+        } else {
+            $logoBase64 = '';
+            error_log("⚠️ Advertencia: No se encontró la imagen en: $logoPath");
+        }
+        
         return "
         <!DOCTYPE html>
         <html>
@@ -120,76 +131,136 @@ class CertificadoPdfController {
             <meta charset='UTF-8'>
             <title>Certificado de Aprobación</title>
             <style>
+                @page {
+                    margin: 20mm 15mm;
+                }
                 body { 
                     font-family: 'DejaVu Sans', Arial, sans-serif; 
                     margin: 0;
-                    padding: 40px;
+                    padding: 0;
                     color: #333;
-                    line-height: 1.4;
+                    line-height: 1.3;
+                    font-size: 11px;
                 }
                 .certificado {                    
-                    padding: 40px;
-                    text-align: center;
+                    padding: 10px 15px;
+                    width: 100%;
+                    box-sizing: border-box;
                 }
                 .header {
-                    margin-bottom: 30px;
+                    margin-bottom: 15px;
+                    text-align: center;
+                }
+                .logo-container {
+                    margin-bottom: 10px;
+                }
+                .logo-img {
+                    max-height: 70px;
+                    width: auto;
+                    display: block;
+                    margin: 0 auto;
                 }
                 .header h1 {
-                    color: #4CAF50;
-                    font-size: 24px;
-                    margin-bottom: 10px;
+                    color: #af4c4cff;
+                    font-size: 16px;
+                    margin: 8px 0;
                     text-transform: uppercase;
+                    line-height: 1.2;
                 }
                 .header h2 {
                     color: #666;
-                    font-size: 16px;
+                    font-size: 12px;
                     font-weight: normal;
-                }
-                .content {
-                    margin: 30px 0;
-                    text-align: left;
-                }
-                .datos-generador {
-                    background-color: #f9f9f9;
-                    padding: 20px;
-                    margin: 20px 0;
-                    border-left: 4px solid #4CAF50;
-                    border-radius: 5px;
-                }
-                .datos-generador p {
-                    margin: 8px 0;
-                }
-                .firma {
-                    margin-top: 50px;
-                    border-top: 2px solid #333;
-                    padding-top: 20px;
-                    text-align: center;
-                }
-                .sello {
-                    color: #4CAF50;
-                    font-weight: bold;
-                    font-size: 14px;
-                    margin-top: 30px;
-                    border: 2px solid #4CAF50;
-                    display: inline-block;
-                    padding: 10px 20px;
-                    border-radius: 5px;
+                    margin: 5px 0;
+                    line-height: 1.2;
                 }
                 .texto-centrado {
                     text-align: center;
-                    margin: 20px 0;
+                    margin: 12px 0;
+                    font-size: 11px;
+                }
+                .datos-generador {
+                    background-color: #f9f9f9;
+                    padding: 12px;
+                    margin: 12px 0;
+                    border-left: 3px solid #af784cff;
+                    border-radius: 4px;
+                    font-size: 10.5px;
+                }
+                .datos-generador p {
+                    margin: 5px 0;
+                }
+                .content {
+                    margin: 15px 0;
+                    text-align: justify;
+                    font-size: 11px;
+                }
+                .content p {
+                    margin: 8px 0;
+                }
+                .footer {
+                    margin-top: 20px;
+                    padding-top: 15px;
+                    border-top: 1px solid #ddd;
+                    font-size: 10px;
+                    text-align: center;
+                }
+                .firma-area {
+                    margin-top: 25px;
+                    text-align: center;
+                    font-size: 10px;
+                }
+                .linea-firma {
+                    width: 250px;
+                    border-top: 1px solid #000;
+                    margin: 40px auto 5px auto;
+                    display: block;
+                }
+                .sello {
+                    color: #0b8f07ff;
+                    font-weight: bold;
+                    font-size: 10px;
+                    margin-top: 15px;
+                    border: 1px solid #0b8f07ff;
+                    display: inline-block;
+                    padding: 8px 15px;
+                    border-radius: 3px;
+                    background-color: #baf3d6ff;
+                }
+                .compacto {
+                    margin: 5px 0;
+                    padding: 0;
+                }
+                .texto-pequeno {
+                    font-size: 10px;
+                    margin: 4px 0;
+                }
+                .fecha-generacion {
+                    text-align: right;
+                    font-size: 9px;
+                    color: #666;
+                    margin-bottom: 10px;
                 }
             </style>
         </head>
         <body>
+            <div class='fecha-generacion'>
+                Generado: $fecha_actual
+            </div>
+            
             <div class='certificado'>
                 <div class='header'>
-                    <h1>Certificado de Aprobación</h1>
-                    <h2>REPORTE ANUAL DE GESTIÓN DE RESIDUOS GENERADOS EN ATENCIÓN EN SALUD Y OTRAS ACTIVIDADES - Año $anio</h2>
+                    <div class='logo-container'>
+                        <img src='$logoBase64' alt='Logo SMS' class='logo-img'>
+                    </div>
+                    <br><br><br><br>
+                    <h2><b>REPORTE DE GESTIÓN INTEGRAL DE RESIDUOS GENERADOS EN ATENCIÓN EN SALUD Y OTRAS ACTIVIDADES</b></h2>
+                    <br><br><br>
+                    <h1>Certificado de Aprobación - Año $anio</h1>
                 </div>
                 
                 <div class='texto-centrado'>
-                    <p>La Secretaría Municipal de Salud de Pasto - oficina de salud ambiental  certifica que:</p>
+                    <p>La Secretaría Municipal de Salud de Pasto - Oficina de Salud Ambiental certifica que:</p>
                 </div>
                 
                 <div class='datos-generador'>
@@ -201,21 +272,24 @@ class CertificadoPdfController {
                 </div>
                 
                 <div class='content'>
-                    <p>Ha cumplido satisfactoriamente con la presentación y aprobación del Reporte Anual 
-                    de Gestión de Residuos generados en atención en salud y otras actividades correspondiente al año <strong>$anio</strong>, 
-                    de acuerdo con lo establecido en la normativa ambiental vigente.</p>
+                    <p>Ha cumplido satisfactoriamente con la presentación y aprobación del Reporte Anual de Gestión integral de Residuos generados en atención en salud y otras actividades correspondiente al año <strong>$anio</strong>, de acuerdo con lo establecido en la normativa ambiental vigente.</p>
                     
-                    <p>El presente certificado acredita que todos los formularios requeridos han sido 
-                    revisados y aprobados por el administrador del sistema.</p>
+                    <p>El presente certificado acredita que todos los formularios requeridos han sido revisados y aprobados por el administrador del sistema.</p>
+                </div>
+                <br><br><br><br>
+                <div class='firma-area'>       
+                    <div class='sello'>
+                        APROBADO
+                    </div>
+                    
+                    <p class='texto-pequeno'>Sistema de Gestión Integral de Residuos Generados en Atención en Salud y Otras Activiades</p>
+                    <p class='texto-pequeno'><em>Certificado generado automáticamente - Válido por un año</em></p>
                 </div>
                 
-                <div class='firma'>                    
-                    <br>
-                    <p>_________________________</p>
-                    <p><strong>Sistema de Gestión de Residuos Generados en Atención en Salud y Otras Actividades</strong></p>
-                    <p><em>Certificado generado automáticamente</em></p>
+                <div class='footer'>                    
+                    <p class='texto-pequeno'>Secretaría Municipal de Salud de Pasto - Oficina de Salud Ambiental</p>
+                    <p class='texto-pequeno'>CAM ANGANOY - Barrio Los Rosales II, Pasto, Nariño - Tel: (602) 7244326 Ext. 8009</p>
                 </div>              
-               
             </div>
         </body>
         </html>

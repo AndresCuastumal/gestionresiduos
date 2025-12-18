@@ -12,13 +12,20 @@ if (!isset($_SESSION['usuario_id']) || $_SESSION['usuario_rol'] !== 'admin') {
 $controller = new RevisionesController($conn);
 
 // Obtener parámetros de filtro
+
+error_log("=== PARÁMETROS GET ===");
+error_log(print_r($_GET, true));
+
 $filtro_tipo = $_GET['tipo_sujeto'] ?? '';
 $filtro_estado = $_GET['estado_general'] ?? '';
+$filtro_busqueda = $_GET['busqueda'] ?? ''; // NUEVO: parámetro de búsqueda
 $pagina_actual = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
-$registros_por_pagina = 8;
+$registros_por_pagina = 10;
+
+error_log("filtro_busqueda: " . $filtro_busqueda);
 
 // Obtener revisiones con filtros
-$revisiones = $controller->obtenerRevisionesConFiltros($filtro_tipo, $filtro_estado);
+$revisiones = $controller->obtenerRevisionesConFiltros($filtro_tipo, $filtro_estado, $filtro_busqueda);
 
 // Obtener tipos de sujeto para el filtro
 $tipos_sujeto = $controller->obtenerTiposSujeto();
@@ -50,7 +57,6 @@ if ($estado_actual !== $estado_general) {
 }
 endforeach;
 
-// Función para determinar el estado general basado en los tres formularios
 // Función para determinar el estado general basado en los tres formularios
 function determinarEstadoGeneral($formulario_mensual, $formulario_accidentes, $formulario_contingencias) {
     // Si alguno está rechazado, estado general es "rechazado"
@@ -142,6 +148,26 @@ include '../../includes/header.php';
             <div class="card-body">
                 <form method="GET" class="row g-3">
                     <div class="col-md-4">
+                        <label for="tipo_sujeto" class="form-label">Nombre o NIT del establecimiento</label>
+                        <div class="input-group">                            
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>                            
+                            <input type="text" 
+                                name="busqueda" 
+                                id="busqueda" 
+                                class="form-control" 
+                                placeholder="Escriba aquí"
+                                value="<?= htmlspecialchars($filtro_busqueda) ?>">
+                            <?php if (!empty($filtro_busqueda)): ?>
+                            <a href="?<?= http_build_query(array_diff_key($_GET, ['busqueda' => ''])) ?>" 
+                            class="btn btn-outline-secondary" 
+                            title="Limpiar búsqueda">
+                                <i class="bi bi-x"></i>
+                            </a>
+                            <?php endif; ?>
+                        </div>
+                        <small class="text-muted">Buscar por nombre del establecimiento o NIT</small>
+                    </div>
+                    <div class="col-md-4">
                         <label for="tipo_sujeto" class="form-label">Tipo de Sujeto</label>
                         <select name="tipo_sujeto" id="tipo_sujeto" class="form-select">
                             <option value="">Todos los tipos</option>
@@ -178,10 +204,13 @@ include '../../includes/header.php';
         <div class="alert alert-info mb-3">
             <i class="bi bi-info-circle me-2"></i>
             Mostrando <?= count($revisiones_paginadas) ?> de <?= $total_registros ?> revisiones
-            <?php if ($filtro_tipo || $filtro_estado): ?>
+            <?php if ($filtro_tipo || $filtro_estado || $filtro_busqueda): ?>
                 (filtradas)
+                <?php if ($filtro_busqueda): ?>
+                    <br><small>Búsqueda: "<?= htmlspecialchars($filtro_busqueda) ?>"</small>
+                <?php endif; ?>
             <?php endif; ?>
-            <br><small><em>Se muestran solo los generadores que reportaron datos en los tres formularios</em></small>
+            <br><small><em>Se muestran solo los generadores que reportaron datos en los tres formularios para 2024</em></small>
         </div>
         
         <?php if (empty($revisiones_paginadas)): ?>

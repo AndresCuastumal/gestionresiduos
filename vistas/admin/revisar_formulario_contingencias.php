@@ -4,7 +4,6 @@ require_once '../../procesos/admin/revisiones_controller.php';
 require_once '../../procesos/admin/reporte_contingencias_controller.php';
 require_once '../../procesos/admin/reporte_mensual_controller.php';
 
-
 // Función para construir URL con filtros
 function construirUrlConFiltros($baseUrl, $paramsAdicionales = []) {
     $filtros = [
@@ -40,13 +39,19 @@ $mensualController = new ReporteMensualController($conn);
 $revision = $revisionController->obtenerRevision($generador_id, $anio);
 $generador = $mensualController->obtenerDatosGenerador($generador_id);
 $datosContingencias = $contingenciasController->obtenerDatosContingencias($generador_id, $anio);
+$estadoGeneral = $revision['estado_general'] ?? 'pendiente';
 
-// Verificar si la revisión está finalizada
-//if ($revisionController->estaFinalizado($generador_id, $anio)) {
-//    $_SESSION['warning'] = "Esta revisión ya ha sido finalizada y no puede ser modificada.";
-//    header("Location: listado_revisiones_view.php");
-//    exit();
-//}
+// Verificar si la revisión está finalizada o si el estado general es rechazado/aprobado
+$estaFinalizado = $revisionController->estaFinalizado($generador_id, $anio);
+$estadoContingencias = $revision['formulario_contingencias'] ?? '';
+$estadosRestrictivos = ['rechazado', 'aprobado'];
+
+// Determinar si el formulario debe estar bloqueado
+$formularioBloqueado = $estaFinalizado || in_array($estadoContingencias, $estadosRestrictivos);
+
+// ✅ NUEVO: Obtener información de intentos
+$infoIntentos = $revisionController->obtenerInfoIntentos($generador_id, $anio);
+$permiteCorreccion = $revisionController->puedeReenviarCorreccion($generador_id, $anio);
 
 // Obtener listas de acciones
 $accionesIncendios = $contingenciasController->obtenerAccionesIncendios();
@@ -67,14 +72,22 @@ $accionesOperativasData = $contingenciasController->obtenerAccionesJSON($datosCo
 
 // Procesar formulario de revisión
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // ✅ AGREGAR ESTA VERIFICACIÓN
-    if ($revisionController->estaFinalizado($generador_id, $anio)) {
-        $_SESSION['error'] = "Esta revisión ya ha sido finalizada y no puede ser modificada.";
+    // ✅ AGREGAR VERIFICACIÓN COMPLETA DE BLOQUEO
+    if ($formularioBloqueado) {
+        $_SESSION['warning'] = "Esta revisión no puede ser modificada porque ya ha sido finalizada o tiene un estado definitivo.";
         header("Location: revisar_formulario_contingencias.php?generador_id=$generador_id&anio=$anio");
         exit();
     }
+    
     $estado = $_POST['estado'];
     $observaciones = $_POST['observaciones'] ?? '';
+    
+    // ✅ NUEVO: Validación adicional - Si intenta rechazar y ya no tiene intentos
+    if ($estado === 'rechazado' && !$permiteCorreccion) {
+        $_SESSION['error'] = "El generador ya ha agotado su única oportunidad de corrección. No puede rechazar este formulario nuevamente.";
+        header("Location: revisar_formulario_contingencias.php?generador_id=$generador_id&anio=$anio");
+        exit();
+    }
     
     $data = [
         'formulario_contingencias' => $estado,
@@ -85,23 +98,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'anio' => $anio
     ];
     
-    if ($revisionController->actualizarRevisionContingencias($data)) {
-        $_SESSION['success'] = "Revisión del plan de contingencias actualizada correctamente";
-        
-        // Determinar a qué formulario redirigir
-        $siguiente_formulario = $revisionController->determinarSiguienteFormulario($generador_id, $anio);
-        
-        // Verificar si todos están aprobados para mostrar mensaje especial
-        if ($revisionController->verificarFormulariosCompletos($generador_id, $anio)) {
-            $_SESSION['info'] = "¡Todos los formularios han sido aprobados! Se procederá con la generación del certificado.";
+    try {
+        if ($revisionController->actualizarRevisionContingencias($data)) {
+            $_SESSION['success'] = "Revisión del plan de contingencias actualizada correctamente";
+            
+            // Determinar a qué formulario redirigir
+            $siguiente_formulario = $revisionController->determinarSiguienteFormulario($generador_id, $anio);
+            
+            // Verificar si todos están aprobados para mostrar mensaje especial
+            if ($revisionController->verificarFormulariosCompletos($generador_id, $anio)) {
+                $_SESSION['info'] = "¡Todos los formularios han sido aprobados! Se procederá con la generación del certificado.";
+            } else {
+                $_SESSION['info'] = "Revisión completada. Estado general actualizado.";
+            }
+            
+            header("Location: $siguiente_formulario");
+            exit();
         } else {
-            $_SESSION['info'] = "Revisión completada. Estado general actualizado.";
+            $_SESSION['error'] = "Error al actualizar la revisión";
         }
-        
-        header("Location: $siguiente_formulario");
-        exit();
-    } else {
-        $_SESSION['error'] = "Error al actualizar la revisión";
+    } catch (Exception $e) {
+        // ✅ NUEVO: Capturar excepciones específicas de límite de intentos
+        $_SESSION['error'] = $e->getMessage();
     }
 }
 
@@ -166,12 +184,33 @@ include '../../includes/header.php';
                                 <?= ucfirst($revision['formulario_contingencias']) ?>
                             </span>
                         </p>
-                        <?php if ($revision['fecha_revision']): ?>
-                            <p><strong>Última revisión:</strong> <?= date('d/m/Y H:i', strtotime($revision['fecha_revision'])) ?></p>                            
+                        <p><strong>Estado general:</strong>
+                            <?php
+                            $clase_estado_general = '';
+                            switch ($estadoGeneral) {
+                                case 'aprobado': $clase_estado_general = 'badge-estado-aprobado'; break;
+                                case 'rechazado': $clase_estado_general = 'badge-estado-rechazado'; break;
+                                default: $clase_estado_general = 'badge-estado-pendiente';
+                            }
+                            ?>
+                            <span class="badge-estado <?= $clase_estado_general ?>">
+                                <?= ucfirst($estadoGeneral) ?>
+                            </span>
+                        </p>
+                        <p><strong>Intentos de corrección:</strong> 
+                            <?= $infoIntentos['intentos_correccion'] ?? 0 ?> de 1 permitidos
+                            <?php if (!$permiteCorreccion): ?>
+                                <span class="badge bg-danger ms-2">ÚNICA OPORTUNIDAD ALCANZADA</span>
+                            <?php endif; ?>
+                        </p>
+                        <?php if ($infoIntentos['fecha_ultimo_rechazo']): ?>
+                            <p><strong>Último rechazo:</strong> <?= date('d/m/Y H:i', strtotime($infoIntentos['fecha_ultimo_rechazo'])) ?></p>
                         <?php endif; ?>
-                    </div>
-                </div>
-
+                    
+                    <?php if ($revision['fecha_revision']): ?>
+                        <p><strong>Última revisión:</strong> <?= date('d/m/Y H:i', strtotime($revision['fecha_revision'])) ?></p>                            
+                    <?php endif; ?>
+                </div> 
                 <?php if ($datosContingencias): ?>
                 <!-- Información general -->
                 <div class="info-card mb-4">
@@ -381,14 +420,19 @@ include '../../includes/header.php';
                             <h6 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Evaluación del Administrador</h6>
                         </div>
                         <div class="card-body">
-                            <?php if ($revisionController->estaFinalizado($generador_id, $anio)): ?>
-                                <!-- ⭐ NUEVO: Mostrar alerta cuando está finalizado -->
+                            <?php if ($formularioBloqueado): ?>
+                                <!-- Mostrar alerta cuando está bloqueado -->
                                 <div class="alert alert-warning">
                                     <i class="bi bi-lock-fill me-2"></i>
-                                    <strong>Revisión Finalizada</strong> - Esta revisión ya ha sido completada y no puede ser modificada. 
-                                    <?php if ($revision['estado_general'] === 'aprobado'): ?>
-                                        El certificado fue enviado al generador.
+                                    <strong>Revisión <?= $estaFinalizado ? 'Finalizada' : 'Bloqueada' ?></strong> - 
+                                    <?php if ($estaFinalizado): ?>
+                                        Esta revisión ya ha sido completada y no puede ser modificada.
                                     <?php else: ?>
+                                        Este formulario ya tiene un estado definitivo (<?= ucfirst($estadoContingencias) ?>) y no puede ser modificado.
+                                    <?php endif; ?>
+                                    <?php if ($estaFinalizado && $revision['estado_general'] === 'aprobado'): ?>
+                                        El certificado fue enviado al generador.
+                                    <?php elseif ($estaFinalizado): ?>
                                         Las observaciones fueron enviadas al generador.
                                     <?php endif; ?>
                                 </div>
@@ -454,7 +498,15 @@ include '../../includes/header.php';
                                     </button>
                                 </div>
                             <?php else: ?>
-                                <!-- Formulario normal cuando hay datos y NO está finalizado -->
+                                <!-- ✅ NUEVO: Mostrar advertencia si no permite más correcciones -->
+                                <?php if (!$permiteCorreccion && $estadoGeneral === 'rechazado'): ?>
+                                <div class="alert alert-danger">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    <strong>ÚNICA OPORTUNIDAD DE CORRECCIÓN ALCANZADA</strong> - El generador ha agotado su única oportunidad de corrección. 
+                                    <strong>No puede rechazar este formulario nuevamente.</strong>
+                                </div>
+                                <?php endif; ?>
+                                <!-- Formulario normal cuando hay datos y NO está bloqueado -->
                                 <div class="mb-3">
                                     <label class="form-label">Estado del formulario:</label>
                                     <select name="estado" class="form-select" required>
