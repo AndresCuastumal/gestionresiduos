@@ -1,24 +1,8 @@
 <?php
-// ======================================================
-// MODIFICACIÓN MÍNIMA: CARGAR MASTERMINDS/HTML5 PRIMERO
-// ======================================================
-
-// 1. PRIMERO Cargar Masterminds/HTML5 manualmente ANTES del autoloader
-$html5_paths = [
-    '/var/www/html/gestionresiduos/vendor/masterminds/html5/src/HTML5.php',
-    __DIR__ . '/../../vendor/masterminds/html5/src/HTML5.php',
-];
-
-foreach ($html5_paths as $path) {
-    if (file_exists($path)) {
-        require_once $path;
-        break;
-    }
-}
-
-// 2. AHORA cargar el resto normalmente
 require_once __DIR__ . '/../../includes/conexion.php';
-require_once __DIR__ . '/../../vendor/autoload.php';
+
+// Incluir DomPDF via Composer
+require_once __DIR__ . '/../../vendor/autoload.php'; // Ruta corregida
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -53,9 +37,9 @@ class CertificadoPdfController {
                 throw new Exception("No se encontraron datos del generador");
             }
             
-            // Configurar DomPDF
+            // Configurar DomPDF - CAMBIO 1: Desactivar HTML5 Parser
             $options = new Options();
-            $options->set('isHtml5ParserEnabled', true);
+            $options->set('isHtml5ParserEnabled', false); // DESACTIVADO
             $options->set('isRemoteEnabled', true);
             $options->set('defaultFont', 'helvetica');
             $options->set('isPhpEnabled', true);
@@ -107,10 +91,11 @@ class CertificadoPdfController {
             $tamano = filesize($ruta_archivo);
             error_log("✅ Certificado PDF generado exitosamente: $ruta_archivo ($tamano bytes)");
             
+            // CAMBIO 2: Agregar contenido PDF al retorno
             return [
                 'nombre_archivo' => $nombre_archivo,
                 'ruta_completa' => $ruta_archivo,
-                'contenido_pdf' => $output  // Solo agregué esto para el email
+                'contenido_pdf' => $output  // Para adjuntar al email
             ];
             
         } catch (Exception $e) {
