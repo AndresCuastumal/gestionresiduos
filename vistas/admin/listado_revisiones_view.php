@@ -148,7 +148,7 @@ include '../../includes/header.php';
             <div class="card-body">
                 <form method="GET" class="row g-3">
                     <div class="col-md-4">
-                        <label for="tipo_sujeto" class="form-label">Nombre o NIT del establecimiento</label>
+                        <label for="busqueda" class="form-label">Nombre o NIT del establecimiento</label>
                         <div class="input-group">                            
                             <span class="input-group-text"><i class="bi bi-search"></i></span>                            
                             <input type="text" 
