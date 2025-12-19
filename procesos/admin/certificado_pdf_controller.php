@@ -37,9 +37,9 @@ class CertificadoPdfController {
                 throw new Exception("No se encontraron datos del generador");
             }
             
-            // Configurar DomPDF - CAMBIO 1: Desactivar HTML5 Parser
+            // Configurar DomPDF
             $options = new Options();
-            $options->set('isHtml5ParserEnabled', false); // DESACTIVADO
+            $options->set('isHtml5ParserEnabled', true);
             $options->set('isRemoteEnabled', true);
             $options->set('defaultFont', 'helvetica');
             $options->set('isPhpEnabled', true);
@@ -91,11 +91,9 @@ class CertificadoPdfController {
             $tamano = filesize($ruta_archivo);
             error_log("✅ Certificado PDF generado exitosamente: $ruta_archivo ($tamano bytes)");
             
-            // CAMBIO 2: Agregar contenido PDF al retorno
             return [
                 'nombre_archivo' => $nombre_archivo,
-                'ruta_completa' => $ruta_archivo,
-                'contenido_pdf' => $output  // Para adjuntar al email
+                'ruta_completa' => $ruta_archivo
             ];
             
         } catch (Exception $e) {
@@ -104,7 +102,7 @@ class CertificadoPdfController {
         }
     }
     
-    private function generarHtmlCertificado($generador, $anio) {
+        private function generarHtmlCertificado($generador, $anio) {
         $fecha_actual = date('d/m/Y');
         $fecha_revision = $generador['fecha_revision'] ? date('d/m/Y', strtotime($generador['fecha_revision'])) : $fecha_actual;
         
