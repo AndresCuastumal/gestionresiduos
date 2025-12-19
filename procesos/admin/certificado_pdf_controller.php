@@ -1,120 +1,24 @@
 <?php
 // ======================================================
-// SOLUCIÓN DEFINITIVA - CARGA GARANTIZADA
+// MODIFICACIÓN MÍNIMA: CARGAR MASTERMINDS/HTML5 PRIMERO
 // ======================================================
 
-// Log inicial
-error_log("=== [PDF_CONTROLLER] INICIANDO ===");
-
-// 1. CARGAR MASTERMINDS/HTML5 PRIMERO - ES CRÍTICO
-error_log("[PDF_CONTROLLER] Cargando Masterminds/HTML5...");
-
-$html5_loaded = false;
+// 1. PRIMERO Cargar Masterminds/HTML5 manualmente ANTES del autoloader
 $html5_paths = [
     '/var/www/html/gestionresiduos/vendor/masterminds/html5/src/HTML5.php',
     __DIR__ . '/../../vendor/masterminds/html5/src/HTML5.php',
-    dirname(dirname(dirname(__FILE__))) . '/vendor/masterminds/html5/src/HTML5.php',
 ];
 
 foreach ($html5_paths as $path) {
     if (file_exists($path)) {
-        error_log("[PDF_CONTROLLER] Encontrado en: $path");
-        
-        // Cargar archivo principal
         require_once $path;
-        
-        // Cargar dependencias críticas
-        $html5_dir = dirname($path);
-        $deps = [
-            'HTML5/Parser.php',
-            'HTML5/Serializer.php', 
-            'HTML5/Exception.php',
-            'HTML5/Elements.php'
-        ];
-        
-        foreach ($deps as $dep) {
-            $dep_path = $html5_dir . '/' . $dep;
-            if (file_exists($dep_path)) {
-                require_once $dep_path;
-            }
-        }
-        
-        $html5_loaded = true;
         break;
     }
 }
 
-if (!$html5_loaded) {
-    error_log("[PDF_CONTROLLER] ERROR: Masterminds/HTML5 NO encontrado");
-    throw new Exception("ERROR CRÍTICO: No se pudo cargar Masterminds/HTML5");
-}
-
-// Verificar que la clase existe
-if (!class_exists('Masterminds\HTML5')) {
-    error_log("[PDF_CONTROLLER] ERROR: Clase Masterminds\HTML5 no existe");
-    throw new Exception("Clase Masterminds\HTML5 no disponible");
-}
-
-error_log("[PDF_CONTROLLER] ✓ Masterminds/HTML5 cargado");
-
-// 2. Cargar autoloader de Composer (para otras librerías)
-error_log("[PDF_CONTROLLER] Cargando autoloader...");
-$autoloader_paths = [
-    '/var/www/html/gestionresiduos/vendor/autoload.php',
-    __DIR__ . '/../../vendor/autoload.php',
-];
-
-$autoloader_loaded = false;
-foreach ($autoloader_paths as $path) {
-    if (file_exists($path)) {
-        require_once $path;
-        $autoloader_loaded = true;
-        error_log("[PDF_CONTROLLER] Autoloader cargado: $path");
-        break;
-    }
-}
-
-if (!$autoloader_loaded) {
-    error_log("[PDF_CONTROLLER] WARNING: Autoloader no encontrado");
-}
-
-// 3. Cargar Dompdf manualmente si es necesario
-if (!class_exists('Dompdf\Dompdf')) {
-    error_log("[PDF_CONTROLLER] Cargando Dompdf manualmente...");
-    $dompdf_paths = [
-        '/var/www/html/gestionresiduos/vendor/dompdf/dompdf/src/Dompdf.php',
-        __DIR__ . '/../../vendor/dompdf/dompdf/src/Dompdf.php',
-    ];
-    
-    foreach ($dompdf_paths as $path) {
-        if (file_exists($path)) {
-            require_once $path;
-            require_once dirname($path) . '/Options.php';
-            error_log("[PDF_CONTROLLER] Dompdf cargado: $path");
-            break;
-        }
-    }
-}
-
-// 4. VERIFICACIÓN FINAL
-error_log("[PDF_CONTROLLER] Verificando clases...");
-if (!class_exists('Masterminds\HTML5')) {
-    throw new Exception("Masterminds\HTML5 no disponible después de carga");
-}
-if (!class_exists('Dompdf\Dompdf')) {
-    throw new Exception("Dompdf no disponible después de carga");
-}
-if (!class_exists('Dompdf\Options')) {
-    throw new Exception("Dompdf\Options no disponible");
-}
-
-error_log("[PDF_CONTROLLER] ✓ Todas las clases verificadas");
-
-// ======================================================
-// CÓDIGO ORIGINAL CON LAS MEJORAS NECESARIAS
-// ======================================================
-
+// 2. AHORA cargar el resto normalmente
 require_once __DIR__ . '/../../includes/conexion.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -206,7 +110,7 @@ class CertificadoPdfController {
             return [
                 'nombre_archivo' => $nombre_archivo,
                 'ruta_completa' => $ruta_archivo,
-                'contenido_pdf' => $output  // Agregado: contenido PDF para enviar por email
+                'contenido_pdf' => $output  // Solo agregué esto para el email
             ];
             
         } catch (Exception $e) {
@@ -416,86 +320,6 @@ class CertificadoPdfController {
         $ruta = $directorio . $nombre_archivo;
         
         return file_exists($ruta) ? $ruta : null;
-    }
-    
-    // MÉTODO NUEVO: Generar y obtener contenido PDF para email
-    public function generarCertificadoParaEmail($generador_id, $anio) {
-        error_log("Generando certificado PDF para email - generador_id: $generador_id, año: $anio");
-        
-        try {
-            // Obtener datos del generador
-            $stmt = $this->conn->prepare("
-                SELECT 
-                    g.id, g.nom_generador, g.nit, g.dir_establecimiento, g.nom_responsable,
-                    ts.nom_clase as nom_tipo, 
-                    r.fecha_revision
-                FROM generador g
-                JOIN subcategoria ts ON g.tipo_sujeto = ts.id
-                JOIN revisiones_anuales r ON g.id = r.generador_id
-                WHERE g.id = ? AND r.anio = ?
-            ");
-            $stmt->execute([$generador_id, $anio]);
-            $generador = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if (!$generador) {
-                throw new Exception("No se encontraron datos del generador para email");
-            }
-            
-            // Configurar DomPDF
-            $options = new Options();
-            $options->set('isHtml5ParserEnabled', true);
-            $options->set('isRemoteEnabled', true);
-            $options->set('defaultFont', 'helvetica');
-            $options->set('isPhpEnabled', true);
-            $options->set('isFontSubsettingEnabled', true);
-            $options->set('dpi', 96);
-            $dompdf = new Dompdf($options);
-            
-            // Crear contenido HTML
-            $html = $this->generarHtmlCertificado($generador, $anio);
-            
-            // Cargar HTML en DomPDF
-            $dompdf->loadHtml($html, 'UTF-8');
-            $dompdf->setPaper('A4', 'portrait');
-            $dompdf->render();
-            
-            // Obtener contenido del PDF
-            $pdfContent = $dompdf->output();
-            
-            // Nombre del archivo para el email
-            $nombre_archivo = "certificado_aprobacion_{$generador_id}_{$anio}.pdf";
-            
-            error_log("✅ PDF generado para email: $nombre_archivo (" . strlen($pdfContent) . " bytes)");
-            
-            return [
-                'contenido_pdf' => $pdfContent,
-                'nombre_archivo' => $nombre_archivo,
-                'generador' => $generador,
-                'anio' => $anio
-            ];
-            
-        } catch (Exception $e) {
-            error_log("❌ Error generando PDF para email: " . $e->getMessage());
-            throw $e;
-        }
-    }
-    
-    // MÉTODO NUEVO: Método auxiliar para verificar si todo está funcionando
-    public function verificarSistema() {
-        error_log("=== VERIFICACIÓN DEL SISTEMA PDF ===");
-        
-        $resultados = [
-            'masterminds_html5' => class_exists('Masterminds\HTML5'),
-            'dompdf' => class_exists('Dompdf\Dompdf'),
-            'dompdf_options' => class_exists('Dompdf\Options'),
-            'directorio_certificados' => is_writable(__DIR__ . "/certificados/") || is_writable(dirname(__DIR__ . "/certificados/"))
-        ];
-        
-        foreach ($resultados as $componente => $estado) {
-            error_log("  $componente: " . ($estado ? "✓ OK" : "✗ FALLA"));
-        }
-        
-        return $resultados;
     }
 }
 ?>
