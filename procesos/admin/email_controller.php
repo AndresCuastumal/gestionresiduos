@@ -99,8 +99,7 @@ class EmailController {
         }
     }
     
-    // ========== MÉTODOS EXISTENTES (MANTENIDOS) ==========
-    
+ 
     /**
      * Enviar certificado de aprobación con PDF adjunto
      */
@@ -311,11 +310,11 @@ class EmailController {
                         <h3>📋 Formularios Completados y Confirmados:</h3>
                         <ul class='checklist'>
                             <li>Reporte Mensual de Residuos</li>
-                            <li>Información Adicional y Capacitaciones</li>
+                            <li>Capacitaciones, accidentes y auditorías</li>
                             <li>Plan de Contingencias</li>
                         </ul>
                         <p><strong>Fecha de recepción:</strong> {$fecha}</p>
-                        <p><strong>Estado actual:</strong> Pendiente de revisión</p>
+                        <p><strong>Estado actual:</strong> Pendiente</p>
                     </div>
                     
                     <p><strong>📌 Proceso de Revisión:</strong></p>
@@ -336,7 +335,7 @@ class EmailController {
                     <p><strong>Secretaría de Salud de Pasto</strong><br>
                     Sistema de Reporte de Gestión de Residuos Generados en Atención en Salud y Otras Actividades</p>
                     <p>📍 Pasto, Nariño, Colombia<br>                    
-                    ✉️ reportegestionresiduos@gmail.com</p>
+                    ✉️ gestionresiduossms@gmail.com</p>
                     <p><em>Este es un mensaje automático, por favor no responda a este correo.</em></p>
                 </div>
             </div>
@@ -457,7 +456,7 @@ class EmailController {
                     <p><strong>Secretaría de Salud de Pasto</strong><br>
                     Sistema de Reporte de Gestión de Residuos Generados en Atención en Salud y Otras Actividades</p>
                     <p>📍 Pasto, Nariño, Colombia<br>                    
-                    ✉️ reportegestionresiduos@gmail.com</p>
+                    ✉️ gestionresiduossms@gmail.com</p>
                     <p><em>Este es un mensaje automático, por favor no responda a este correo.</em></p>
                 </div>
             </div>
@@ -577,7 +576,7 @@ class EmailController {
                     </ol>
                     
                     <p style='text-align: center;'>
-                        <a href='http://192.168.20.7/reportegestionresiduos' class='btn'>
+                        <a href='http://34.56.157.229/gestionresiduos' class='btn'>
                             📊 Ingresar al Sistema
                         </a>
                     </p>
@@ -604,84 +603,84 @@ class EmailController {
         
         return "CONFIRMACION DE RECEPCION - REPORTE ANUAL {$anio}
 
-Estimado(a) {$datos['nom_responsable']},
+        Estimado(a) {$datos['nom_responsable']},
 
-Hemos recibido exitosamente TODOS SUS REPORTES para el generador 
-{$datos['nom_generador']} (NIT: {$datos['nit']}) correspondientes al año {$anio}.
+        Hemos recibido exitosamente TODOS SUS REPORTES para el generador 
+        {$datos['nom_generador']} (NIT: {$datos['nit']}) correspondientes al año {$anio}.
 
-FORMULARIOS COMPLETADOS Y CONFIRMADOS:
-✅ Reporte Mensual de Residuos
-✅ Información Adicional y Capacitaciones  
-✅ Plan de Contingencias
+        FORMULARIOS COMPLETADOS Y CONFIRMADOS:
+        ✅ Reporte Mensual de Residuos
+        ✅ Capacitaciones, accidentes y auditorías  
+        ✅ Plan de Contingencias
 
-Fecha de recepción: {$fecha}
-Estado actual: Pendiente de revisión
+        Fecha de recepción: {$fecha}
+        Estado actual: Pendiente de revisión
 
-Su reporte ha sido registrado en nuestro sistema y será asignado a un técnico 
-para revisión. Recibirá una notificación cuando se complete la revisión.
+        Su reporte ha sido registrado en nuestro sistema y será asignado a un técnico 
+        para revisión. Recibirá una notificación cuando se complete la revisión.
 
-Este correo es solo una confirmación de recepción. La revisión técnica se 
-realizará posteriormente y podría requerir ajustes.
+        Este correo es solo una confirmación de recepción. La revisión técnica se 
+        realizará posteriormente y podría requerir ajustes.
 
-Secretaría de Salud de Pasto
-Sistema de Gestión de Residuos Peligrosos
-Este es un mensaje automático, por favor no responda.";
-    }
-    
-    /**
-     * Crear versión texto plano para email de aprobación
-     */
-    private function crearCuerpoTextoAprobacion($datos, $anio) {
-        $fecha = date('d/m/Y');
-        
-        return "CERTIFICADO DE APROBACION
+        Secretaría de Salud de Pasto
+        Sistema de Gestión de Residuos Peligrosos
+        Este es un mensaje automático, por favor no responda.";
+            }
+            
+            /**
+             * Crear versión texto plano para email de aprobación
+             */
+            private function crearCuerpoTextoAprobacion($datos, $anio) {
+                $fecha = date('d/m/Y');
+                
+                return "CERTIFICADO DE APROBACION
 
-Estimado(a) {$datos['nom_responsable']},
+        Estimado(a) {$datos['nom_responsable']},
 
-Nos complace informarle que el Reporte Anual {$anio} para el generador 
-{$datos['nom_generador']} (NIT: {$datos['nit']}) ha sido APROBADO satisfactoriamente.
+        Nos complace informarle que el Reporte Anual {$anio} para el generador 
+        {$datos['nom_generador']} (NIT: {$datos['nit']}) ha sido APROBADO satisfactoriamente.
 
-RESUMEN DE LA APROBACION:
-- Generador: {$datos['nom_generador']}
-- NIT: {$datos['nit']}
-- Año del Reporte: {$anio}
-- Fecha de Aprobación: {$fecha}
+        RESUMEN DE LA APROBACION:
+        - Generador: {$datos['nom_generador']}
+        - NIT: {$datos['nit']}
+        - Año del Reporte: {$anio}
+        - Fecha de Aprobación: {$fecha}
 
-Se adjunta el certificado de aprobación en formato PDF. Este documento acredita 
-el cumplimiento de los requisitos establecidos en la normativa ambiental vigente.
+        Se adjunta el certificado de aprobación en formato PDF. Este documento acredita 
+        el cumplimiento de los requisitos establecidos en la normativa ambiental vigente.
 
-Secretaría de Salud de Pasto
-Sistema de Gestión de Residuos Peligrosos
-Este es un mensaje automático, por favor no responda.";
-    }
-    
-    /**
-     * Crear versión texto plano para email de rechazo
-     */
-    private function crearCuerpoTextoRechazo($datos, $anio, $observaciones) {
-        $fecha = date('d/m/Y');
-        
-        return "CORRECCIONES REQUERIDAS - REPORTE ANUAL {$anio}
+        Secretaría de Salud de Pasto
+        Sistema de Gestión de Residuos Peligrosos
+        Este es un mensaje automático, por favor no responda.";
+            }
+            
+            /**
+             * Crear versión texto plano para email de rechazo
+             */
+            private function crearCuerpoTextoRechazo($datos, $anio, $observaciones) {
+                $fecha = date('d/m/Y');
+                
+                return "CORRECCIONES REQUERIDAS - REPORTE ANUAL {$anio}
 
-Estimado(a) {$datos['nom_responsable']},
+        Estimado(a) {$datos['nom_responsable']},
 
-El Reporte Anual {$anio} para el generador {$datos['nom_generador']} 
-(NIT: {$datos['nit']}) requiere correcciones antes de poder ser aprobado.
+        El Reporte Anual {$anio} para el generador {$datos['nom_generador']} 
+        (NIT: {$datos['nit']}) requiere correcciones antes de poder ser aprobado.
 
-OBSERVACIONES DEL REVISOR:
-{$observaciones}
+        OBSERVACIONES DEL REVISOR:
+        {$observaciones}
 
-ACCIONES REQUERIDAS:
-1. Ingrese al sistema de gestión de residuos
-2. Revise las observaciones detalladas
-3. Realice las correcciones necesarias
-4. Vuelva a enviar el reporte
+        ACCIONES REQUERIDAS:
+        1. Ingrese al sistema de gestión de residuos
+        2. Revise las observaciones detalladas
+        3. Realice las correcciones necesarias
+        4. Vuelva a enviar el reporte
 
-Enlace al sistema: http://192.168.20.122/reportegestionresiduos
+        Enlace al sistema: http://34.56.157.229/gestionresiduos/
 
-Secretaría de Salud de Pasto
-Sistema de Gestión de Residuos Peligrosos
-Este es un mensaje automático, por favor no responda.";
+        Secretaría de Salud de Pasto
+        Sistema de Gestión de Residuos Peligrosos
+        Este es un mensaje automático, por favor no responda.";
     }
     
     // ========== MÉTODO PARA REGISTRAR ENVÍOS ==========
