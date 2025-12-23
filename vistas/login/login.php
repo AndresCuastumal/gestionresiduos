@@ -69,9 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
     </div>
 </main>
-<div class="text-center mb-5">
-    botón para abrir en otra pestaña el instructivo del aplicativo de gestión de residuos
-    <a href="/includes/InstructivoGestionResiduos_v1.pdf" target="_blank" class="btn btn-info">Ver Instructivo del Aplicativo</a>
+<div class="tauth-card shadow p-4 mb-5 mt-5 text-center">    
+    <a href="/gestionresiduos/includes/InstructivoGestionResiduos_v1.pdf" target="_blank" class="btn btn-info">Ver Instructivo del Aplicativo</a>
 </div>
 
 <?php include '../../includes/footer.php'; ?>
