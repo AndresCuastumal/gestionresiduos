@@ -1,9 +1,7 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+session_start();
 require_once '../../includes/conexion.php';
-
+require_once '../../procesos/admin/revisiones_controller.php';
 class GeneradoresController {
     private $conn;
     private $generadores = [];
