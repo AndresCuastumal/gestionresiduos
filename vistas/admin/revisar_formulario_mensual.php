@@ -27,6 +27,7 @@ $generador = $mensualController->obtenerDatosGenerador($generador_id);
 $reportes_existentes = $mensualController->obtenerReportesExistentes($generador_id, $anio);
 
 // Verificar si la revisión está finalizada o si el estado general es rechazado/aprobado
+$estadoGeneral = $revision['estado_general'] ?? '';
 $estaFinalizado = $revisionController->estaFinalizado($generador_id, $anio);
 $estadoMensual = $revision['formulario_mensual'] ?? '';
 $estadosRestrictivos = ['rechazado', 'aprobado'];

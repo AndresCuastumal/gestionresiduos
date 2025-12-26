@@ -2,11 +2,12 @@
 require_once '../../procesos/generador/listado_generadores_controller.php';
 include '../../includes/header.php';
 
-session_start();
+//session_start();
 if (!isset($_SESSION['usuario_id']) || $_SESSION['usuario_rol'] !== 'generador') {
     header("Location: ../login/login.php");
     exit();
 }
+$controller = new GeneradoresController($conn);
 
 // Procesar reenvío de correcciones si se envió el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reenviar_correccion'])) {
