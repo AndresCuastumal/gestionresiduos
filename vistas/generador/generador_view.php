@@ -1,6 +1,6 @@
 <?php
 require_once '../../procesos/generador/generador_controller.php';
-
+$controller = new GeneradorController($conn);
 // Verificar si estamos editando (si viene un ID por GET)
 $generadorExistente = [];
 if (isset($_GET['id'])) {

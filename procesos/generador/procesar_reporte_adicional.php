@@ -1,8 +1,12 @@
 <?php
 session_start();
 require_once '../../includes/conexion.php';
-// ✅ SOLO incluir controlador de revisiones para validación
 require_once '../admin/revisiones_controller.php';
+
+// Activar reporte de errores para debug
+error_reporting(E_ALL);
+ini_set('display_errors', 0); // Mejor no mostrar errores en producción
+ini_set('log_errors', 1);
 
 // Verificar que viene del formulario adicional
 if (!isset($_SESSION['generador_id_reportando'])) {
@@ -33,8 +37,7 @@ try {
             $infoIntentos = $revisionController->obtenerInfoIntentos($generador_id, $anio);
             
             // ✅ CORREGIDO: No usar 'max_intentos_permitidos' que no existe
-            // Definir el límite manualmente según tu configuración
-            $limite_intentos = 2; // Cambia a 1 o 2 según necesites
+            $limite_intentos = 2;
             $mensaje_error = "Has alcanzado el número máximo de intentos de corrección permitidos. " .
                            "(" . $infoIntentos['intentos_correccion'] . " de " . $limite_intentos . " intento(s) utilizado(s))";
             
@@ -45,49 +48,122 @@ try {
         }
         
         error_log("✅ VALIDACIÓN EXITOSA: Intentos disponibles para corrección");
-        // ✅ IMPORTANTE: NO INCREMENTAR AQUÍ - Se hará cuando se envíe el correo de rechazo
     }
     
-    // Procesar archivos - SOLO si se subieron nuevos
+    // ✅ FUNCIÓN MEJORADA PARA PROCESAR ARCHIVOS CON VALIDACIÓN DE TAMAÑO
     function procesarArchivo($archivo, $directorio, $prefijo, $generador_id, $anio, $campo_existente) {
         global $conn;
         
         // Si no se subió archivo, mantener el existente
         if ($archivo['error'] !== UPLOAD_ERR_OK) {
+            if ($archivo['error'] !== UPLOAD_ERR_NO_FILE) {
+                // Manejar errores de subida
+                $upload_errors = [
+                    UPLOAD_ERR_INI_SIZE => 'El archivo excede el tamaño máximo permitido por el servidor.',
+                    UPLOAD_ERR_FORM_SIZE => 'El archivo excede el tamaño máximo permitido por el formulario.',
+                    UPLOAD_ERR_PARTIAL => 'El archivo fue subido parcialmente.',
+                    UPLOAD_ERR_NO_TMP_DIR => 'No existe directorio temporal en el servidor.',
+                    UPLOAD_ERR_CANT_WRITE => 'No se pudo escribir el archivo en disco.',
+                    UPLOAD_ERR_EXTENSION => 'Una extensión de PHP detuvo la subida del archivo.'
+                ];
+                
+                $error_msg = $upload_errors[$archivo['error']] ?? 'Error desconocido al subir el archivo.';
+                throw new Exception("Error en la subida del archivo: " . $error_msg);
+            }
+            
+            // Si no hay archivo nuevo, mantener el existente
             $stmt = $conn->prepare("SELECT $campo_existente FROM reporte_anual_adicional WHERE generador_id = ? AND anio = ?");
             $stmt->execute([$generador_id, $anio]);
             $existente = $stmt->fetch(PDO::FETCH_ASSOC);
             return $existente[$campo_existente] ?? null;
         }
         
-        if (!is_dir($directorio)) mkdir($directorio, 0755, true);
+        // ✅ VALIDACIÓN DE TIPO DE ARCHIVO
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime_type = finfo_file($finfo, $archivo['tmp_name']);
+        finfo_close($finfo);
         
-        $tipo_archivo = mime_content_type($archivo['tmp_name']);
-        if ($tipo_archivo !== 'application/pdf') throw new Exception("Solo se permiten PDF");
-        if ($archivo['size'] > 10 * 1024 * 1024) throw new Exception("Archivo muy grande");
+        error_log("Validando archivo: " . $archivo['name'] . ", tipo: " . $mime_type);
         
+        if (!in_array($mime_type, ['application/pdf', 'application/x-pdf'])) {
+            throw new Exception("El archivo '" . $archivo['name'] . "' debe ser un PDF válido.");
+        }
+        
+        // ✅ VALIDACIÓN DE TAMAÑO (10 MB máximo)
+        $max_size_bytes = 10 * 1024 * 1024; // 10 MB
+        if ($archivo['size'] > $max_size_bytes) {
+            $size_mb = number_format($archivo['size'] / (1024 * 1024), 2);
+            throw new Exception("El archivo '" . $archivo['name'] . "' excede el tamaño máximo de 10 MB. Tamaño actual: {$size_mb} MB");
+        }
+        
+        // ✅ VALIDACIÓN DE TAMAÑO MÍNIMO (opcional)
+        if ($archivo['size'] == 0) {
+            throw new Exception("El archivo '" . $archivo['name'] . "' está vacío o no es válido.");
+        }
+        
+        // Crear directorio si no existe
+        if (!is_dir($directorio)) {
+            mkdir($directorio, 0755, true);
+        }
+        
+        // Generar nombre único
         $extension = pathinfo($archivo['name'], PATHINFO_EXTENSION);
         $nombre_archivo = $prefijo . $generador_id . '_' . $anio . '_' . time() . '.' . $extension;
         $ruta_completa = $directorio . $nombre_archivo;
         
+        // Mover archivo
         if (!move_uploaded_file($archivo['tmp_name'], $ruta_completa)) {
-            throw new Exception("Error al guardar archivo");
+            $error = error_get_last();
+            throw new Exception("Error al guardar el archivo '" . $archivo['name'] . "': " . ($error['message'] ?? 'Error desconocido'));
         }
         
+        error_log("✅ Archivo guardado: " . $nombre_archivo . " (" . $archivo['size'] . " bytes)");
         return $nombre_archivo;
     }
     
-    $directorio = 'soportes_generador/';
-    $archivo_cronograma = procesarArchivo($_FILES['archivo_cronograma'], $directorio, 'cronograma_', $generador_id, $anio, 'archivo_cronograma');
-    $archivo_soportes = procesarArchivo($_FILES['archivo_soportes_capacitaciones'], $directorio, 'soportes_capacitaciones_', $generador_id, $anio, 'archivo_soportes_capacitaciones');
-    $archivo_resultados_auditorias = procesarArchivo($_FILES['archivo_resultados_auditorias'], $directorio, 'resultados_auditorias_', $generador_id, $anio, 'archivo_resultados_auditorias');
-    $archivo_plan_mejoramiento = procesarArchivo($_FILES['archivo_plan_mejoramiento'], $directorio, 'plan_mejoramiento_', $generador_id, $anio, 'archivo_plan_mejoramiento');
+    // ✅ Procesar cada archivo con validación
+    $directorio = __DIR__ . '/soportes_generador/';
     
-    // Convertir acciones a JSON - MANEJO CORRECTO DE CHECKBOXES
+    $archivo_cronograma = procesarArchivo(
+        $_FILES['archivo_cronograma'], 
+        $directorio, 
+        'cronograma_', 
+        $generador_id, 
+        $anio, 
+        'archivo_cronograma'
+    );
+    
+    $archivo_soportes = procesarArchivo(
+        $_FILES['archivo_soportes_capacitaciones'], 
+        $directorio, 
+        'soportes_capacitaciones_', 
+        $generador_id, 
+        $anio, 
+        'archivo_soportes_capacitaciones'
+    );
+    
+    $archivo_resultados_auditorias = procesarArchivo(
+        $_FILES['archivo_resultados_auditorias'], 
+        $directorio, 
+        'resultados_auditorias_', 
+        $generador_id, 
+        $anio, 
+        'archivo_resultados_auditorias'
+    );
+    
+    $archivo_plan_mejoramiento = procesarArchivo(
+        $_FILES['archivo_plan_mejoramiento'], 
+        $directorio, 
+        'plan_mejoramiento_', 
+        $generador_id, 
+        $anio, 
+        'archivo_plan_mejoramiento'
+    );
+    
+    // ✅ Resto del código (se mantiene igual)...
     $acciones_preventivas = isset($_POST['acciones_preventivas']) ? $_POST['acciones_preventivas'] : [];
     $acciones_json = !empty($acciones_preventivas) ? json_encode($acciones_preventivas) : '[]';
     
-    // Obtener valores de campos opcionales
     $num_accidentes = isset($_POST['num_accidentes']) ? $_POST['num_accidentes'] : 0;
     $otra_accion_preventiva = isset($_POST['otra_accion_preventiva']) ? trim($_POST['otra_accion_preventiva']) : null;
     
@@ -99,16 +175,15 @@ try {
         $otra_accion_preventiva = $existente['otra_accion_preventiva'] ?? null;
     }
     
-    // Si no se seleccionó "otra", limpiar el campo
     if (!in_array('otra', $acciones_preventivas)) {
         $otra_accion_preventiva = null;
     }
     
-    // Iniciar transacción para asegurar consistencia entre ambas tablas
+    // Iniciar transacción
     $conn->beginTransaction();
     
     try {
-        // Verificar si ya existe un registro para este generador y año
+        // Verificar si ya existe un registro
         $stmt_check = $conn->prepare("SELECT id FROM reporte_anual_adicional WHERE generador_id = ? AND anio = ?");
         $stmt_check->execute([$generador_id, $anio]);
         $existe_registro = $stmt_check->fetch(PDO::FETCH_ASSOC);
@@ -148,7 +223,6 @@ try {
                 $anio
             ]);
             
-            // ✅ Mensaje diferenciado para correcciones (SIN REFERENCIA A CORREO)
             if ($estado_actual === 'rechazado') {
                 $_SESSION['mensaje_exito'] = "¡Correcciones de la información adicional guardadas y enviadas para revisión!";
             } else {
@@ -161,7 +235,7 @@ try {
                  num_capacitaciones_ejecutadas, num_empleados_capacitados, archivo_soportes_capacitaciones,
                  tiene_accidentes, num_accidentes, acciones_preventivas, otra_accion_preventiva,
                  num_auditorias, archivo_resultados_auditorias, archivo_plan_mejoramiento)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?)");
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             
             $stmt->execute([
                 $generador_id, $anio,
@@ -183,13 +257,11 @@ try {
         }
         
         // ✅ ACTUALIZAR ESTADO EN REVISIONES_ANUALES
-        // Verificar si existe registro en revisiones_anuales
         $stmt_check_revision = $conn->prepare("SELECT generador_id FROM revisiones_anuales WHERE generador_id = ? AND anio = ?");
         $stmt_check_revision->execute([$generador_id, $anio]);
         $existe_revision = $stmt_check_revision->fetch(PDO::FETCH_ASSOC);
         
         if ($existe_revision) {
-            // Actualizar estado del formulario de accidentes a "pendiente"
             $stmt_update = $conn->prepare("UPDATE revisiones_anuales SET 
                 formulario_accidentes = 'pendiente',
                 fecha_revision = NULL,
@@ -199,7 +271,6 @@ try {
             
             $stmt_update->execute([$generador_id, $anio]);
         } else {
-            // Insertar nuevo registro en revisiones_anuales
             $stmt_insert = $conn->prepare("INSERT INTO revisiones_anuales 
                 (generador_id, anio, formulario_accidentes, estado_general)
                 VALUES (?, ?, 'pendiente', 'incompleto')");
@@ -207,21 +278,18 @@ try {
             $stmt_insert->execute([$generador_id, $anio]);
         }
         
-        // ✅ Log del procesamiento exitoso
         error_log("PROCESAMIENTO EXITOSO - Reporte adicional guardado para generador: $generador_id, año: $anio");
         if ($estado_actual === 'rechazado') {
             error_log("CORRECCIÓN ENVIADA - Se procesó corrección del formulario de accidentes");
         }
         
-        // Confirmar transacción
         $conn->commit();
         
-        // Mantener los datos de sesión y redirigir al formulario de contingencias    
+        // Redirigir al formulario de contingencias
         header("Location: ../../vistas/generador/reporte_contingencias_view.php?id=" . $generador_id);
         exit();
         
     } catch (Exception $e) {
-        // Revertir transacción en caso de error
         $conn->rollBack();
         throw $e;
     }

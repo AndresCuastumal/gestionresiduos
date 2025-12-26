@@ -546,3 +546,153 @@ if (!$reporte_bloqueado) {
     
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ✅ NUEVO: Script para validar tamaño de PDFs -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const formulario = document.querySelector('form');
+    const maxSizeMB = 10;
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+    
+    // Lista de todos los inputs de archivos PDF
+    const fileInputs = [
+        { id: 'archivo_cronograma', name: 'Cronograma de capacitaciones' },
+        { id: 'archivo_soportes_capacitaciones', name: 'Soportes de capacitaciones' },
+        { id: 'archivo_resultados_auditorias', name: 'Resultados de auditorías' },
+        { id: 'archivo_plan_mejoramiento', name: 'Plan de mejoramiento' }
+    ];
+    
+    // Crear mensajes de error para cada input
+    fileInputs.forEach(input => {
+        const inputElement = document.querySelector(`input[name="${input.id}"]`);
+        if (inputElement) {
+            inputElement.setAttribute('data-original-name', input.name);
+        }
+    });
+    
+    // Validar antes de enviar el formulario
+    formulario.addEventListener('submit', function(e) {
+        let archivosInvalidos = [];
+        
+        // Verificar cada input de archivo
+        fileInputs.forEach(input => {
+            const inputElement = document.querySelector(`input[name="${input.id}"]`);
+            if (inputElement && inputElement.files.length > 0) {
+                const archivo = inputElement.files[0];
+                
+                // Validar tamaño
+                if (archivo.size > maxSizeBytes) {
+                    archivosInvalidos.push({
+                        nombre: input.name,
+                        tamaño: (archivo.size / (1024 * 1024)).toFixed(2)
+                    });
+                }
+                
+                // Validar tipo de archivo
+                if (!archivo.type.includes('pdf')) {
+                    e.preventDefault();
+                    alert(`El archivo "${input.name}" debe ser un PDF.\n\nArchivo seleccionado: ${archivo.name}`);
+                    inputElement.value = '';
+                    inputElement.focus();
+                    return false;
+                }
+            }
+        });
+        
+        // Si hay archivos demasiado grandes, mostrar error
+        if (archivosInvalidos.length > 0) {
+            e.preventDefault();
+            
+            let mensajeError = `Los siguientes archivos exceden el tamaño máximo de ${maxSizeMB} MB:\n\n`;
+            archivosInvalidos.forEach(archivo => {
+                mensajeError += `• ${archivo.nombre}: ${archivo.tamaño} MB\n`;
+            });
+            mensajeError += `\nPor favor, reduzca el tamaño de los archivos o seleccione otros.`;
+            
+            alert(mensajeError);
+        }
+    });
+    
+    // Validar en tiempo real al seleccionar archivos
+    fileInputs.forEach(input => {
+        const inputElement = document.querySelector(`input[name="${input.id}"]`);
+        if (inputElement) {
+            inputElement.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    const archivo = this.files[0];
+                    const tamañoMB = (archivo.size / (1024 * 1024)).toFixed(2);
+                    
+                    // Crear o actualizar mensaje de validación
+                    let mensajeDiv = this.parentNode.querySelector('.validacion-archivo');
+                    if (!mensajeDiv) {
+                        mensajeDiv = document.createElement('div');
+                        mensajeDiv.className = 'validacion-archivo mt-1';
+                        this.parentNode.appendChild(mensajeDiv);
+                    }
+                    
+                    if (archivo.size > maxSizeBytes) {
+                        mensajeDiv.innerHTML = `
+                            <small class="text-danger">
+                                <i class="bi bi-exclamation-triangle"></i> 
+                                Archivo demasiado grande (${tamañoMB} MB). 
+                                El tamaño máximo es ${maxSizeMB} MB.
+                            </small>
+                        `;
+                        
+                        // Deshabilitar el botón de submit temporalmente
+                        const botonSubmit = formulario.querySelector('button[type="submit"]');
+                        if (botonSubmit) botonSubmit.disabled = true;
+                        
+                    } else if (!archivo.type.includes('pdf')) {
+                        mensajeDiv.innerHTML = `
+                            <small class="text-danger">
+                                <i class="bi bi-exclamation-triangle"></i> 
+                                Solo se permiten archivos PDF.
+                            </small>
+                        `;
+                        this.value = '';
+                        
+                    } else {
+                        mensajeDiv.innerHTML = `
+                            <small class="text-success">
+                                <i class="bi bi-check-circle"></i> 
+                                Archivo válido (${tamañoMB} MB).
+                            </small>
+                        `;
+                        
+                        // Habilitar el botón de submit si estaba deshabilitado
+                        const botonSubmit = formulario.querySelector('button[type="submit"]');
+                        if (botonSubmit) botonSubmit.disabled = false;
+                        
+                        // Ocultar mensaje después de 3 segundos
+                        setTimeout(() => {
+                            if (mensajeDiv.parentNode) {
+                                mensajeDiv.remove();
+                            }
+                        }, 3000);
+                    }
+                } else {
+                    // Limpiar mensaje si no hay archivo
+                    const mensajeDiv = this.parentNode.querySelector('.validacion-archivo');
+                    if (mensajeDiv) mensajeDiv.remove();
+                    
+                    // Habilitar el botón de submit
+                    const botonSubmit = formulario.querySelector('button[type="submit"]');
+                    if (botonSubmit) botonSubmit.disabled = false;
+                }
+            });
+        }
+    });
+    
+    // Actualizar la alerta de instrucciones para incluir el límite de tamaño
+    const alertaImportante = document.querySelector('.alert.alert-warning ul');
+    if (alertaImportante) {
+        const items = alertaImportante.querySelectorAll('li');
+        if (items.length > 0) {
+            const nuevoItem = document.createElement('li');
+            nuevoItem.innerHTML = '<strong>Tamaño máximo por archivo:</strong> 10 MB';
+            alertaImportante.appendChild(nuevoItem);
+        }
+    }
+});
+</script>

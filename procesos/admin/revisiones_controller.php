@@ -66,7 +66,7 @@ class RevisionesController {
             }
             
             $stmt = $this->conn->prepare("SELECT 
-                intentos_correccion,
+                intentos_correccion, estado_general,
                 fecha_ultimo_rechazo
                 FROM revisiones_anuales 
                 WHERE generador_id = ? AND anio = ?");
