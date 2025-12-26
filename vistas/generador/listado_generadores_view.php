@@ -402,6 +402,8 @@ include '../../includes/header.php';
 <!-- Footer -->
 <?php include '../../includes/footer.php'; ?>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
 function confirmarEliminacion(id) {
     const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
