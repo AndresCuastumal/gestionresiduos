@@ -53,24 +53,47 @@ class RevisionesController {
     /**
      * Obtener información de intentos de corrección
      */
+    // En revisiones_controller.php, en el método obtenerInfoIntentos():
     public function obtenerInfoIntentos($generador_id, $anio) {
-        $sql = "SELECT intentos_correccion, fecha_ultimo_rechazo, estado_general 
+        try {
+            $stmt = $conn->prepare("SELECT 
+                intentos_correccion,
+                fecha_ultimo_rechazo,
+                -- Si la columna no existe, usar valor por defecto
+                COALESCE(max_intentos_permitidos, 1) as max_intentos_permitidos
                 FROM revisiones_anuales 
-                WHERE generador_id = ? AND anio = ?";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute([$generador_id, $anio]);
-        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        // Si no existe, devolver valores por defecto
-        if (!$resultado) {
+                WHERE generador_id = ? AND anio = ?");
+            
+            // O mejor, si sabes que la columna no existe:
+            $stmt = $conn->prepare("SELECT 
+                intentos_correccion,
+                fecha_ultimo_rechazo
+                FROM revisiones_anuales 
+                WHERE generador_id = ? AND anio = ?");
+            
+            $stmt->execute([$generador_id, $anio]);
+            $info = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($info) {
+                // Agregar valor por defecto si no existe la columna
+                $info['max_intentos_permitidos'] = $info['max_intentos_permitidos'] ?? 1;
+            }
+            
+            return $info ?: [
+                'intentos_correccion' => 0,
+                'max_intentos_permitidos' => 1,
+                'fecha_ultimo_rechazo' => null
+            ];
+            
+        } catch (Exception $e) {
+            error_log("Error al obtener info de intentos: " . $e->getMessage());
+            // Retornar valores por defecto
             return [
                 'intentos_correccion' => 0,
-                'fecha_ultimo_rechazo' => null,
-                'estado_general' => 'pendiente'
+                'max_intentos_permitidos' => 1,
+                'fecha_ultimo_rechazo' => null
             ];
         }
-        
-        return $resultado;
     }
     
     /**
