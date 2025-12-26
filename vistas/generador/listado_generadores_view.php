@@ -1,12 +1,19 @@
 <?php
-require_once '../../procesos/generador/listado_generadores_controller.php';
-include '../../includes/header.php';
+
 
 //session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 if (!isset($_SESSION['usuario_id']) || $_SESSION['usuario_rol'] !== 'generador') {
     header("Location: ../login/login.php");
     exit();
 }
+
+require_once '../../includes/conexion.php';
+require_once '../../procesos/generador/listado_generadores_controller.php';
+
 $controller = new GeneradoresController($conn);
 
 // Procesar reenvío de correcciones si se envió el formulario
@@ -38,6 +45,8 @@ $info_correcciones = [];
 foreach ($generadores as $generador) {
     $info_correcciones[$generador['id']] = $controller->obtenerInfoRechazos($generador['id']);
 }
+
+include '../../includes/header.php';
 ?>
 
 <style>
