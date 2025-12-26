@@ -1,12 +1,16 @@
 <?php
-session_start();
+//session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../../includes/conexion.php';
-require_once '../../procesos/admin/revisiones_controller.php';
 class GeneradoresController {
     private $conn;
     private $generadores = [];
     private $estados_revision = [];
     private $error = null;
+
+    private $revisionesController; // ✅ NUEVO: Controlador de revisiones
 
     public function __construct($conn) {
         $this->conn = $conn;

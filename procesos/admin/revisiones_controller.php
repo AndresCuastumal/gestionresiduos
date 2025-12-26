@@ -1,4 +1,7 @@
 <?php
+
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 class RevisionesController {
     private $conn;
     
@@ -56,16 +59,13 @@ class RevisionesController {
     // En revisiones_controller.php, en el método obtenerInfoIntentos():
     public function obtenerInfoIntentos($generador_id, $anio) {
         try {
-            $stmt = $conn->prepare("SELECT 
-                intentos_correccion,
-                fecha_ultimo_rechazo,
-                -- Si la columna no existe, usar valor por defecto
-                COALESCE(max_intentos_permitidos, 1) as max_intentos_permitidos
-                FROM revisiones_anuales 
-                WHERE generador_id = ? AND anio = ?");
+            // Verificar que $this->conn existe
+            if (!$this->conn) {
+                error_log("ERROR: Conexión a BD no disponible en RevisionesController");
+                return $this->getValoresPorDefecto();
+            }
             
-            // O mejor, si sabes que la columna no existe:
-            $stmt = $conn->prepare("SELECT 
+            $stmt = $this->conn->prepare("SELECT 
                 intentos_correccion,
                 fecha_ultimo_rechazo
                 FROM revisiones_anuales 
@@ -75,25 +75,24 @@ class RevisionesController {
             $info = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($info) {
-                // Agregar valor por defecto si no existe la columna
-                $info['max_intentos_permitidos'] = $info['max_intentos_permitidos'] ?? 1;
+                // ✅ Agregar valor por defecto para max_intentos_permitidos
+                $info['max_intentos_permitidos'] = 1; // Valor por defecto
             }
             
-            return $info ?: [
-                'intentos_correccion' => 0,
-                'max_intentos_permitidos' => 1,
-                'fecha_ultimo_rechazo' => null
-            ];
+            return $info ?: $this->getValoresPorDefecto();
             
         } catch (Exception $e) {
-            error_log("Error al obtener info de intentos: " . $e->getMessage());
-            // Retornar valores por defecto
-            return [
-                'intentos_correccion' => 0,
-                'max_intentos_permitidos' => 1,
-                'fecha_ultimo_rechazo' => null
-            ];
+            error_log("Error al obtener info de rechazos: " . $e->getMessage());
+            return $this->getValoresPorDefecto();
         }
+    }
+
+    private function getValoresPorDefecto() {
+        return [
+            'intentos_correccion' => 0,
+            'max_intentos_permitidos' => 1,
+            'fecha_ultimo_rechazo' => null
+        ];
     }
     
     /**
