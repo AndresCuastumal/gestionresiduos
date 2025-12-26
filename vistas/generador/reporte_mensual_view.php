@@ -364,3 +364,114 @@ if(isset($contingencia) && is_array($contingencia) && isset($contingencia['estad
     
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ✅ NUEVO: Script para validar tamaño del PDF -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const formulario = document.querySelector('form');
+    const inputPdf = document.getElementById('soporte_pdf');
+    const maxSizeMB = 10;
+    const maxSizeBytes = maxSizeMB * 1024 * 1024; // 10 MB en bytes
+    
+    formulario.addEventListener('submit', function(e) {
+        if (inputPdf.files.length > 0) {
+            const archivo = inputPdf.files[0];
+            
+            // Validar tamaño del archivo
+            if (archivo.size > maxSizeBytes) {
+                e.preventDefault(); // Detener el envío del formulario
+                
+                // Mostrar alerta de error
+                alert(`El archivo PDF excede el tamaño máximo permitido.\n\n` +
+                      `Tamaño del archivo: ${(archivo.size / (1024*1024)).toFixed(2)} MB\n` +
+                      `Tamaño máximo permitido: ${maxSizeMB} MB`);
+                
+                // Limpiar el input para obligar a seleccionar otro archivo
+                inputPdf.value = '';
+                
+                // Enfocar el input
+                inputPdf.focus();
+            }
+            
+            // Validar tipo de archivo (opcional, pero recomendado)
+            if (!archivo.type.includes('pdf')) {
+                e.preventDefault();
+                alert('Por favor, seleccione un archivo PDF válido.');
+                inputPdf.value = '';
+                inputPdf.focus();
+            }
+        }
+    });
+    
+    // También mostrar advertencia al seleccionar archivo
+    inputPdf.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            const archivo = this.files[0];
+            const sizeMB = (archivo.size / (1024*1024)).toFixed(2);
+            
+            if (archivo.size > maxSizeBytes) {
+                // Mostrar mensaje junto al input
+                const mensajeError = document.createElement('div');
+                mensajeError.className = 'alert alert-danger mt-2';
+                mensajeError.innerHTML = `
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Archivo demasiado grande</strong> (${sizeMB} MB). 
+                    El tamaño máximo es ${maxSizeMB} MB.
+                `;
+                
+                // Eliminar mensajes anteriores
+                const mensajeAnterior = this.parentNode.querySelector('.alert');
+                if (mensajeAnterior) {
+                    mensajeAnterior.remove();
+                }
+                
+                this.parentNode.appendChild(mensajeError);
+                
+                // Opcional: deshabilitar el botón de submit
+                const botonSubmit = formulario.querySelector('button[type="submit"]');
+                if (botonSubmit) {
+                    botonSubmit.disabled = true;
+                }
+            } else {
+                // Habilitar botón si estaba deshabilitado
+                const botonSubmit = formulario.querySelector('button[type="submit"]');
+                if (botonSubmit) {
+                    botonSubmit.disabled = false;
+                }
+                
+                // Eliminar mensajes de error si existen
+                const mensajeError = this.parentNode.querySelector('.alert');
+                if (mensajeError) {
+                    mensajeError.remove();
+                }
+                
+                // Opcional: mostrar mensaje de éxito
+                const mensajeExito = document.createElement('div');
+                mensajeExito.className = 'alert alert-success mt-2';
+                mensajeExito.innerHTML = `
+                    <i class="bi bi-check-circle me-2"></i>
+                    Archivo válido (${sizeMB} MB).
+                `;
+                
+                // Eliminar mensajes anteriores de éxito
+                const mensajeAnterior = this.parentNode.querySelector('.alert');
+                if (mensajeAnterior) {
+                    mensajeAnterior.remove();
+                }
+                
+                this.parentNode.appendChild(mensajeExito);
+                
+                // Ocultar mensaje después de 3 segundos
+                setTimeout(() => {
+                    if (mensajeExito.parentNode) {
+                        mensajeExito.remove();
+                    }
+                }, 3000);
+            }
+        }
+    });
+});
+</script>
