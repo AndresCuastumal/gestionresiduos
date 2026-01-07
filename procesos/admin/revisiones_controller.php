@@ -31,7 +31,7 @@ class RevisionesController {
         error_log("🔍 puedeReenviarCorreccion - Verificando:");
         error_log("🔍 Intentos: " . $info['intentos_correccion']);
         error_log("🔍 Máximo: 1 (configuración fija)");
-        error_log("🔍 Estado general: " . $info['estado_general']);
+        
         
         return true;
     }
