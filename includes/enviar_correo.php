@@ -11,8 +11,8 @@ function configurarMailer() {
     $mail->isSMTP();
     $mail->Host = 'smtp.gmail.com';
     $mail->SMTPAuth = true;
-    $mail->Username = 'reportegestionresiduos@gmail.com'; // Tu dirección Gmail
-    $mail->Password = 'lpew jrlz uaej ubzs'; // Contraseña de aplicación
+    $mail->Username = 'gestionresiduossms@gmail.com'; // Tu dirección Gmail
+    $mail->Password = 'qvkk yjcv gktx alvb'; // Contraseña de aplicación
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Port = 587;
     

@@ -20,13 +20,13 @@ class EmailController {
             $mail->isSMTP();
             $mail->Host = 'smtp.gmail.com';
             $mail->SMTPAuth = true;
-            $mail->Username = 'reportegestionresiduos@gmail.com';
-            $mail->Password = 'lpew jrlz uaej ubzs'; // Contraseña de aplicación
+            $mail->Username = 'gestionresiduossms@gmail.com';
+            $mail->Password = 'qvkk yjcv gktx alvb'; // Contraseña de aplicación
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = 587;
             
             // Configuración del remitente
-            $mail->setFrom('reportegestionresiduos@gmail.com', 'Sistema de Reporte de Gestión de Residuos en atención en Salud y otras Actividades - Secretaría de Salud Pasto');
+            $mail->setFrom('gestionresiduossms@gmail.com', 'Sistema de Reporte de Gestión de Residuos en atención en Salud y otras Actividades - Secretaría de Salud Pasto');
             $mail->CharSet = 'UTF-8';
             $mail->Encoding = 'base64';
             $mail->isHTML(true);
