@@ -210,7 +210,7 @@ include '../../includes/header.php';
                     <br><small>Búsqueda: "<?= htmlspecialchars($filtro_busqueda) ?>"</small>
                 <?php endif; ?>
             <?php endif; ?>
-            <br><small><em>Se muestran solo los generadores que reportaron datos en los tres formularios para 2024</em></small>
+            <br><small><em>Se muestran solo los generadores que reportaron datos en los tres formularios</em></small>
         </div>
         
         <?php if (empty($revisiones_paginadas)): ?>
