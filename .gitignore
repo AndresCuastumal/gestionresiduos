@@ -2,3 +2,6 @@
 *.log
 debug.log
 /procesos/admin/debug.log
+.env
+.env.local
+.env.*.local
