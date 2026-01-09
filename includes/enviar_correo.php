@@ -1,35 +1,30 @@
 <?php
+// configurarMailer.php
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-function configurarMailer() {
+function configurarMailerSendGrid() {
     $mail = new PHPMailer(true);
     
-    // Configuración SMTP (Gmail)
+    // Configuración SendGrid SMTP
     $mail->isSMTP();
-    $mail->Host = 'smtp.gmail.com';
+    $mail->Host = 'smtp.sendgrid.net';
     $mail->SMTPAuth = true;
-    $mail->Username = 'gestionresiduossms@gmail.com';
-    $mail->Password = 'qvkk yjcv gktx alvb';
+    $mail->Username = 'apikey'; // ¡Siempre es literalmente 'apikey'!
+    $mail->Password = getenv('SENDGRID_API_KEY'); // Reemplaza con tu API Key real
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Port = 587;
     
-    // CORREGIR: Usar el mismo email de autenticación como remitente
-    $mail->setFrom('gestionresiduossms@gmail.com', 'Reporte de Gestión de Residuos - Secretaría de Salud Pasto');
+    // Configuración del remitente
+    $mail->setFrom('no-reply@gestionresiduos.com', 'Gestión de Residuos - Secretaría de Salud Pasto');
     
-    // Opcional: Agregar reply-to si quieres otra dirección
-    // $mail->addReplyTo('otro-email@dominio.com', 'Nombre');
+    // Opcional: Configurar reply-to diferente
+    //$mail->addReplyTo('contacto@gestionresiduos.com', 'Contacto Gestión de Residuos');
     
     $mail->isHTML(true);
     $mail->CharSet = 'UTF-8';
-    
-    // IMPORTANTE: Agregar opciones para debug si hay problemas
-    // $mail->SMTPDebug = 2; // Habilita solo para debugging
-    // $mail->Debugoutput = function($str, $level) {
-    //     error_log("PHPMailer: $str");
-    // };
     
     return $mail;
 }
