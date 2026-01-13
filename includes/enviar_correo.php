@@ -18,13 +18,20 @@ function configurarMailer() {
     
     // CORREGIR: Usar el mismo email de autenticación como remitente
     $mail->setFrom('gestionresiduossms@gmail.com', 'Reporte de Gestión de Residuos - Secretaría de Salud Pasto');
-    
+    $mail->addCustomHeader('Precedence', 'bulk');
+    $mail->addCustomHeader('X-Entity-Ref-ID', uniqid());
     // Opcional: Agregar reply-to si quieres otra dirección
     // $mail->addReplyTo('otro-email@dominio.com', 'Nombre');
     
     $mail->isHTML(true);
     $mail->CharSet = 'UTF-8';
-    
+    $mail->SMTPOptions = [
+        'ssl' => [
+            'verify_peer' => true,       // Cambia de false a true
+            'verify_peer_name' => true,  // Cambia de false a true
+            'allow_self_signed' => false // Cambia de true a false
+        ]
+    ];
     // IMPORTANTE: Agregar opciones para debug si hay problemas
     // $mail->SMTPDebug = 2; // Habilita solo para debugging
     // $mail->Debugoutput = function($str, $level) {
