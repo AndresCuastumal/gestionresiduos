@@ -3,7 +3,7 @@
 require 'enviar_correo.php';
 
 $mail = configurarMailer();
-$mail->addAddress('TU_EMAIL_REAL@hotmail.com');
+$mail->addAddress('carlosandres540@hotmail.com');
 $mail->Subject = 'Test Google SMTP';
 $mail->Body = 'Prueba de conexión';
 
