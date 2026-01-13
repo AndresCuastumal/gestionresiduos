@@ -7,7 +7,7 @@ include '../../includes/header.php';
     <div class="auth-card p-4 shadow">
             <div class="alert alert-danger text-center p-4 mb-4" style="border: 3px solid #dc3545;">
         <h4 class="text-danger">🚨 SISTEMA DE REGISTRO DESHABILITADO</h4>
-        <p class="mb-0">Estamos solucionando problemas técnicos. Intenta nuevamente más tarde.</p>
+        <p class="mb-0">Estamos solucionando inconvenientes técnicos en nuestro sistema de registro. Le informaremos por esta misma página cuando el servicio vuelva a estar disponible.</p>
     </div>
         <h2 class="auth-title">Crear Cuenta</h2>
         
