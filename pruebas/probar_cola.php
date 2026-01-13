@@ -4,7 +4,7 @@ echo "<h2>Procesador de Cola de Correos</h2>";
 echo "<p>Ejecutando en: " . date('Y-m-d H:i:s') . "</p>";
 
 // Incluir y ejecutar el procesador
-require_once 'cron/procesar_cola.php';
+require_once '../cron/procesar_cola.php';
 
 echo "<hr>";
 echo "<h3>Estado actual de la cola:</h3>";
