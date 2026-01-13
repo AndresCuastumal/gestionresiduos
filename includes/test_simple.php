@@ -1,6 +1,6 @@
 <?php
 // test_simple.php - Prueba MUY simple
-require 'includes/conexion.php';
+require 'conexion.php';
 
 try {
     // Insertar directamente en la tabla (sin funciones)
