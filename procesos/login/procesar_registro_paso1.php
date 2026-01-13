@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         if ($queue_id) {
             // Éxito al agregar a la cola
-            header("Location: ../../vistas/login/registro.php?success=Registro procesado. Recibirás el correo de verificación en breve (revisa spam). El enlace expira en 24 horas.");
+            header("Location: ../../vistas/login/registro.php?success=Registro procesado. Recibirás un correo de verificación dentro de las próximas 24 horas (revisa spam).");
         } else {
             // Fallo al agregar a la cola
             header("Location: ../../vistas/login/registro.php?error=Error al procesar tu registro. Por favor intenta nuevamente.");
