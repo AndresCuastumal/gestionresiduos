@@ -5,6 +5,10 @@ include '../../includes/header.php';
 
 <main class="auth-container d-flex justify-content-center align-items-center min-vh-70 mb-5 mt-5">
     <div class="auth-card p-4 shadow">
+            <div class="alert alert-danger text-center p-4 mb-4" style="border: 3px solid #dc3545;">
+        <h4 class="text-danger">🚨 SISTEMA DE REGISTRO DESHABILITADO</h4>
+        <p class="mb-0">Estamos solucionando problemas técnicos. Intenta nuevamente más tarde.</p>
+    </div>
         <h2 class="auth-title">Crear Cuenta</h2>
         
         <?php if (isset($_GET['error'])): ?>
