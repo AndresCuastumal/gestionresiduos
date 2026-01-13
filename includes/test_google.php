@@ -1,6 +1,6 @@
 <?php
 // test_google.php
-require 'includes/enviar_correo.php';
+require 'enviar_correo.php';
 
 $mail = configurarMailer();
 $mail->addAddress('TU_EMAIL_REAL@hotmail.com');
