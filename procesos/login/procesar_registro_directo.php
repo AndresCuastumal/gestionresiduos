@@ -47,24 +47,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         // 4. Insertar usuario directamente
         $stmt = $conn->prepare("
-            INSERT INTO usuarios (nombre, email, password, rol, activo, fecha_registro) 
-            VALUES (:nombre, :email, :password, 'usuario', 1, NOW())
+            INSERT INTO usuarios (email, password, rol, activo, fecha_registro) 
+            VALUES (:nombre, :email, :password, 'generador', 1, NOW())
         ");
         
-        $stmt->bindParam(':nombre', $nombre);
+        
         $stmt->bindParam(':email', $email);
         $stmt->bindParam(':password', $password_hash);
         
         if ($stmt->execute()) {
             // Opcional: Iniciar sesión automáticamente
             session_start();
-            $_SESSION['usuario_id'] = $conn->lastInsertId();
-            $_SESSION['usuario_nombre'] = $nombre;
+            $_SESSION['usuario_id'] = $conn->lastInsertId();            
             $_SESSION['usuario_email'] = $email;
             $_SESSION['usuario_rol'] = 'generador';
             
             // Redirigir al dashboard o página principal
-            header("Location: ../../vistas/dashboard/index.php?success=Cuenta creada exitosamente");
+            header("Location: ../../vistas/login/login.php?success=Cuenta creada exitosamente. Ya puedes iniciar sesión.");
         } else {
             header("Location: ../../vistas/login/registro.php?error=Error al crear la cuenta. Intenta nuevamente.");
         }

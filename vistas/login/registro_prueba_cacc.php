@@ -17,11 +17,7 @@ include '../../includes/header.php';
         
         <form method="post" action="../../procesos/login/procesar_registro_directo.php">
             <!-- NUEVO: Campos para registro directo -->
-            <div class="form-group mb-3">
-                <label for="nombre">Nombre Completo:</label>
-                <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre completo">
-            </div>
-            
+                        
             <div class="form-group mb-3">
                 <label for="email">Correo Electrónico:</label>
                 <input type="email" id="email" name="email" required placeholder="tu@mail.com">
