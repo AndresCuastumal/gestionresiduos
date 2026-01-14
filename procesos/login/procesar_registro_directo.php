@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // 4. Insertar usuario directamente
         $stmt = $conn->prepare("
             INSERT INTO usuarios (email, password, rol, activo, fecha_registro) 
-            VALUES (:nombre, :email, :password, 'generador', 1, NOW())
+            VALUES (:email, :password, 'generador', 1, NOW())
         ");
         
         
