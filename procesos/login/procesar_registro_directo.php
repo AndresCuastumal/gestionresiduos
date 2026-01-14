@@ -4,19 +4,13 @@
 require '../../includes/conexion.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Obtener datos del formulario
-    $nombre = trim($_POST['nombre'] ?? '');
+    // Obtener datos del formulario    
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
     
     try {
-        // 1. Validaciones básicas
-        if (empty($nombre) || empty($email) || empty($password)) {
-            header("Location: ../../vistas/login/registro.php?error=Todos los campos son obligatorios.");
-            exit();
-        }
-        
+        // 1. Validaciones básicas   
         if ($password !== $confirm_password) {
             header("Location: ../../vistas/login/registro.php?error=Las contraseñas no coinciden.");
             exit();
