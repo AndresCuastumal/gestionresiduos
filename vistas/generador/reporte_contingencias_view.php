@@ -717,9 +717,9 @@ if($reporte_confirmado): ?>
                     <p>Una vez enviado para revisión:</p>
                     <ul>
                         <li>No podrá realizar modificaciones a ninguno de los tres reportes</li>
-                        <li>El administrador revisará toda la información</li>
-                        <li>Recibirá una notificación por correo electrónico</li>
-                        <li>El estado cambiará a "Pendiente de revisión"</li>
+                        <li>El técnico asignado revisará toda la información reportada</li>                        
+                        <li>El estado cambiará a "Pendiente"</li>
+                        <li>Revise el sistema periódicamente para ver si hay correcciones por hacer o para descargar su certificado"</li>
                     </ul>
                     <p>Si necesita realizar cambios posteriores, deberá contactar al administrador.</p>
                 </div>
