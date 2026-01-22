@@ -197,6 +197,43 @@ if (!$reporte_bloqueado) {
                     <?= strtoupper($estado_formulario_accidentes) ?>
                 </span>
             </div>
+            <!-- ✅ NUEVO: Mostrar observaciones si el formulario fue rechazado -->
+            <?php if ($estado_formulario_accidentes === 'rechazado'): 
+                // Obtener las observaciones específicas del formulario de accidentes
+                $observaciones = '';
+                if (isset($info_adicional['observaciones_accidentes']) && !empty($info_adicional['observaciones_accidentes'])) {
+                    $observaciones = $info_adicional['observaciones_accidentes'];
+                } elseif ($estado_formulario_accidentes === 'rechazado') {
+                    // Si está rechazado pero no tenemos las observaciones en $info_adicional, consultarlas
+                    $stmt = $conn->prepare("SELECT observaciones_accidentes FROM revisiones_anuales WHERE generador_id = ? AND anio = ?");
+                    $stmt->execute([$generador_id, $anio_actual]);
+                    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $observaciones = $result['observaciones_accidentes'] ?? '';
+                }
+                
+                if (!empty($observaciones)):
+            ?>
+            <div class="card mb-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0"><i class="bi bi-exclamation-circle me-2"></i>Observaciones del Revisor</h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h6><i class="bi bi-info-circle me-2"></i>Correcciones Requeridas:</h6>
+                        <p class="mb-0" style="white-space: pre-wrap;"><?= htmlspecialchars($observaciones) ?></p>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="bi bi-lightbulb me-1"></i>
+                            Por favor, revise las observaciones anteriores, realice las correcciones necesarias y vuelva a enviar el formulario.
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <?php 
+                endif;
+            endif; 
+            ?>
             <div class="card-body">
                 <?php if (isset($_SESSION['error'])): ?>
                     <div class="alert alert-danger">
