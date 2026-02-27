@@ -10,7 +10,8 @@ if (!isset($_SESSION['usuario_id'])) {
 
 // Obtener rol del usuario para permisos
 $rol = $_SESSION['usuario_rol'];
-
+$fecha_limite = strtotime('2026-02-23');
+$fecha_actual = time();
 include '../includes/header.php'; // Incluye el encabezado HTML
 ?>
         <!-- Sección hero con explicación -->
@@ -44,7 +45,7 @@ include '../includes/header.php'; // Incluye el encabezado HTML
                         <i class="bi bi-calendar-check text-primary fs-1"></i>
                         <h5 class="card-title">Reporte Año <?= date('Y', strtotime('-1 year') ) ?></h5>
                         <p class="card-text">Módulo para reportar información relacionada con gestión de residuos generados en atención en salud y otras activiades para el año <?= date('Y', strtotime('-1 year') ) ?>.</p>
-                        <?php if (in_array($rol, ['generador'])): ?>
+                        <?php if (in_array($rol, ['generador']) && $fecha_actual <= $fecha_limite):  ?>
                             <a href="generador/reporte_mensual_view.php" class="btn btn-sm btn-outline-primary mt-2">Acceder</a>
                         <?php endif; ?>
                     </div>
