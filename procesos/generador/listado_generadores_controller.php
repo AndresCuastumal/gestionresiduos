@@ -391,7 +391,41 @@ class GeneradoresController {
             return ['success' => false, 'message' => 'Error al procesar correcciones'];
         }
     }
+
+    /**
+     * Obtener los estados de los formularios para un generador
+     */
+    public function obtenerEstadosFormularios($generador_id) {
+        $anio = date('Y') - 1;
+        $stmt = $this->conn->prepare("
+            SELECT 
+                formulario_mensual,
+                formulario_accidentes,
+                formulario_contingencias
+            FROM revisiones_anuales 
+            WHERE generador_id = ? AND anio = ?
+        ");
+        $stmt->execute([$generador_id, $anio]);
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$resultado) {
+            return [
+                'formulario_mensual' => 'sin_datos',
+                'formulario_accidentes' => 'sin_datos',
+                'formulario_contingencias' => 'sin_datos'
+            ];
+        }
+        
+        return [
+            'formulario_mensual' => $resultado['formulario_mensual'] ?? 'sin_datos',
+            'formulario_accidentes' => $resultado['formulario_accidentes'] ?? 'sin_datos',
+            'formulario_contingencias' => $resultado['formulario_contingencias'] ?? 'sin_datos'
+        ];
+    }
 }
+
+
+
 
 // Uso del controlador
 $controller = new GeneradoresController($conn);

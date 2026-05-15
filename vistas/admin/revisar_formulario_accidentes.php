@@ -25,31 +25,43 @@ $mensualController = new ReporteMensualController($conn);
 
 // Obtener datos
 $revision = $revisionController->obtenerRevision($generador_id, $anio);
-// ✅ AGREGAR: Definir estadoGeneral
 $estadoGeneral = $revision['estado_general'] ?? 'pendiente';
 $generador = $mensualController->obtenerDatosGenerador($generador_id);
 $datosReporte = $accidentesController->obtenerDatosReporteAdicional($generador_id, $anio);
 $accionesPreventivas = $accidentesController->obtenerAccionesPreventivas($datosReporte);
 
-// VERIFICAR SI REALMENTE HAY DATOS - NUEVA LÓGICA
+// VERIFICAR SI REALMENTE HAY DATOS
 $tieneDatos = $accidentesController->existeRegistro($generador_id, $anio);
 
 // Verificar si la revisión está finalizada
 $estaFinalizado = $revisionController->estaFinalizado($generador_id, $anio);
 
-// ✅ CORRECTO: Verificar solo el estado de ESTE formulario específico
 $estadoAccidentes = $revision['formulario_accidentes'] ?? '';
 $estadosRestrictivos = ['rechazado', 'aprobado'];
 
-// Determinar si el formulario debe estar bloqueado
-// Solo se bloquea si: 1) Está finalizado O 2) Este formulario específico ya fue revisado
-$formularioBloqueado = $estaFinalizado || in_array($estadoAccidentes, $estadosRestrictivos);
+// ✅ MODIFICADO: El formulario se bloquea si:
+// 1) Está finalizado 
+// 2) Este formulario específico ya fue revisado (aprobado/rechazado)
+// 3) NO hay datos diligenciados
+$formularioBloqueado = $estaFinalizado || 
+                      in_array($estadoAccidentes, $estadosRestrictivos) ||
+                      !$tieneDatos; // ✅ NUEVO: Bloquear si no hay datos
 
-// ✅ NUEVO: Obtener información de intentos
+// ✅ NUEVO: Mensaje específico para cuando no hay datos
+$mensajeBloqueo = '';
+if (!$tieneDatos) {
+    $mensajeBloqueo = "No hay datos diligenciados en este formulario. No es posible realizar una revisión hasta que el generador complete la información.";
+} elseif ($estaFinalizado) {
+    $mensajeBloqueo = "Esta revisión ya ha sido completada y no puede ser modificada.";
+} elseif (in_array($estadoAccidentes, $estadosRestrictivos)) {
+    $mensajeBloqueo = "Este formulario ya tiene un estado definitivo (" . ucfirst($estadoAccidentes) . ") y no puede ser modificado.";
+}
+
+// Obtener información de intentos
 $infoIntentos = $revisionController->obtenerInfoIntentos($generador_id, $anio);
 $permiteCorreccion = $revisionController->puedeReenviarCorreccion($generador_id, $anio);
 
-// Lista de acciones preventivas posibles - DEBE COINCIDIR CON LOS VALORES DEL FORMULARIO
+// Lista de acciones preventivas posibles
 $listaAcciones = [
     'remision_salud' => 'Remisión a servicios de salud',
     'capacitacion_primeros_auxilios' => 'Capacitación en primeros auxilios',
@@ -62,7 +74,7 @@ $listaAcciones = [
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Si el formulario está bloqueado, no permitir edición
     if ($formularioBloqueado) {
-        $_SESSION['warning'] = "Esta revisión no puede ser modificada porque ya ha sido finalizada o tiene un estado definitivo.";
+        $_SESSION['warning'] = $mensajeBloqueo;
         header("Location: listado_revisiones_view.php");
         exit();
     }
@@ -70,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $estado = $_POST['estado'];
     $observaciones = $_POST['observaciones'] ?? '';
     
-    // ✅ NUEVO: Validación adicional - Si intenta rechazar y ya no tiene intentos
+    // Validación adicional - Si intenta rechazar y ya no tiene intentos
     if ($estado === 'rechazado' && !$permiteCorreccion) {
         $_SESSION['error'] = "El generador ya ha agotado su única oportunidad de corrección. No puede rechazar este formulario nuevamente.";
         header("Location: revisar_formulario_accidentes.php?generador_id=$generador_id&anio=$anio");
@@ -104,89 +116,93 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['error'] = "Error al actualizar la revisión";
         }
     } catch (Exception $e) {
-        // ✅ NUEVO: Capturar excepciones específicas de límite de intentos
         $_SESSION['error'] = $e->getMessage();
     }
 }
 
 include '../../includes/header.php';
 ?>
-<style>
 
-</style>
-    <!-- Contenedor principal -->
-    <div class="container my-4">
-        <!-- Breadcrumb -->
-        <nav aria-label="breadcrumb" class="mb-3">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="../dashboard.php">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="listado_revisiones_view.php">Revisiones</a></li>
-                <li class="breadcrumb-item active">Revisión - Capacitaciones y Accidentes</li>
-            </ol>
-        </nav>
-
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="bi bi-clipboard-check me-2"></i>Revisión - Capacitaciones, Accidentes y Auditorías</h2>
-            <a href="listado_revisiones_view.php" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-arrow-left me-2"></i>Volver
+<div class="container my-4">
+    <!-- Breadcrumb -->
+    <nav class="mb-3">
+        <div class="nav nav-tabs custom-tabs" role="tablist">                
+            <a class="nav-link" href="revisar_formulario_mensual.php?generador_id=<?= $generador_id ?>&anio=<?= $anio ?>">
+                <i class="bi bi-clipboard-data me-1"></i>Reporte Mensual de Residuos
+            </a>                
+            <a class="nav-link active" href="#">
+                <i class="bi bi-clipboard-check me-2"></i>Capacitaciones, accidentes y auditorías
+            </a>
+            <a class="nav-link" href="revisar_formulario_contingencias.php?generador_id=<?= $generador_id ?>&anio=<?= $anio ?>">
+                <i class="bi bi-exclamation-triangle me-1"></i>Plan de Contingencias
             </a>
         </div>
+    </nav>
 
-        <!-- Tarjeta informativa -->
-        <div class="card mb-4" style="background-color: #f8f4ceff;">
-            <div class="card-body">
-                <p class="card-text" style="text-align: justify; text-justify: inter-word;">
-                    Revisión de capacitaciones, accidentes y auditorías relacionadas con la gestión de residuos peligrosos. 
-                    Verifique la información y determine el estado del formulario.
-                </p>
-            </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-clipboard-check me-2"></i>Revisión - Capacitaciones, Accidentes y Auditorías</h2>
+        <a href="listado_revisiones_view.php" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Lista de Establecimientos
+        </a>
+    </div>
+
+    <!-- Tarjeta informativa -->
+    <div class="card mb-4" style="background-color: #f8f4ceff;">
+        <div class="card-body">
+            <p class="card-text" style="text-align: justify; text-justify: inter-word;">
+                Revisión de capacitaciones, accidentes y auditorías relacionadas con la gestión de residuos peligrosos. 
+                Verifique la información y determine el estado del formulario.
+                <?php if (!$tieneDatos): ?>
+                    <strong class="text-danger">⚠️ Este generador aún no ha diligenciado este formulario.</strong>
+                <?php endif; ?>
+            </p>
         </div>
+    </div>
 
-        <div class="card">
-            <div class="card-header bg-light">
-                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Información del Reporte</h5>
-            </div>
-            <div class="card-body">
-                <!-- Información del generador -->
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <h6 class="text-muted">Información del Generador</h6>
-                        <p><strong>Nombre:</strong> <?= htmlspecialchars($generador['nom_generador']) ?></p>
-                        <p><strong>NIT:</strong> <?= htmlspecialchars($generador['nit']) ?></p>
-                        <p><strong>Responsable:</strong> <?= htmlspecialchars($generador['nom_responsable']) ?></p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="text-muted">Detalles de la Revisión</h6>
-                        <p><strong>Año:</strong> <?= $anio ?></p>
-                        <p><strong>Estado actual:</strong> 
-                            <?php
-                            $clase_estado = '';
-                            switch ($revision['formulario_accidentes']) {
-                                case 'aprobado': $clase_estado = 'badge-estado-aprobado'; break;
-                                case 'rechazado': $clase_estado = 'badge-estado-rechazado'; break;
-                                case 'pendiente': $clase_estado = 'badge-estado-pendiente'; break;
-                                case 'sin_datos': $clase_estado = 'badge-estado-sin-datos'; break;
-                                default: $clase_estado = 'badge-estado-pendiente';
-                            }
-                            ?>
-                            <span class="badge-estado <?= $clase_estado ?>">
-                                <?= ucfirst($revision['formulario_accidentes']) ?>
-                            </span>
-                        </p>                        
-                        <p><strong>Estado general:</strong>
-                            <?php
-                            $clase_estado_general = '';
-                            switch ($estadoGeneral) {
-                                case 'aprobado': $clase_estado_general = 'badge-estado-aprobado'; break;
-                                case 'rechazado': $clase_estado_general = 'badge-estado-rechazado'; break;
-                                default: $clase_estado_general = 'badge-estado-pendiente';
-                            }
-                            ?>
-                            <span class="badge-estado <?= $clase_estado_general ?>">
-                                <?= ucfirst($estadoGeneral) ?>
-                            </span>
-                        </p>
-                        <!-- ✅ NUEVO: Información de intentos de corrección -->
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Información del Reporte</h5>
+        </div>
+        <div class="card-body">
+            <!-- Información del generador -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6 class="text-muted">Información del Generador</h6>
+                    <p><strong>Nombre:</strong> <?= htmlspecialchars($generador['nom_generador']) ?></p>
+                    <p><strong>NIT:</strong> <?= htmlspecialchars($generador['nit']) ?></p>
+                    <p><strong>Responsable:</strong> <?= htmlspecialchars($generador['nom_responsable']) ?></p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-muted">Detalles de la Revisión</h6>
+                    <p><strong>Año:</strong> <?= $anio ?></p>
+                    <p><strong>Estado  del formulario:</strong> 
+                        <?php
+                        $clase_estado = '';
+                        switch ($revision['formulario_accidentes']) {
+                            case 'aprobado': $clase_estado = 'badge-estado-aprobado'; break;
+                            case 'rechazado': $clase_estado = 'badge-estado-rechazado'; break;
+                            case 'pendiente': $clase_estado = 'badge-estado-pendiente'; break;
+                            case 'sin_datos': $clase_estado = 'badge-estado-sin-datos'; break;
+                            default: $clase_estado = 'badge-estado-pendiente';
+                        }
+                        ?>
+                        <span class="badge-estado <?= $clase_estado ?>">
+                            <?= ucfirst($revision['formulario_accidentes'] ?? 'sin_datos') ?>
+                        </span>
+                    </p>                        
+                    <p><strong>Estado general:</strong>
+                        <?php
+                        $clase_estado_general = '';
+                        switch ($estadoGeneral) {
+                            case 'aprobado': $clase_estado_general = 'badge-estado-aprobado'; break;
+                            case 'rechazado': $clase_estado_general = 'badge-estado-rechazado'; break;
+                            default: $clase_estado_general = 'badge-estado-pendiente';
+                        }
+                        ?>
+                        <span class="badge-estado <?= $clase_estado_general ?>">
+                            <?= ucfirst($estadoGeneral) ?>
+                        </span>
+                    </p>
                     <p><strong>Intentos de corrección:</strong> 
                         <?= $infoIntentos['intentos_correccion'] ?? 0 ?> de 1 permitidos
                         <?php if (!$permiteCorreccion): ?>
@@ -198,12 +214,14 @@ include '../../includes/header.php';
                     <?php endif; ?>
                     
                     <?php if ($revision['fecha_revision']): ?>
-                        <p><strong>Última revisión:</strong> <?= date('d/m/Y H:i', strtotime($revision['fecha_revision'])) ?></p>                            
+                        <p><strong>Última revisión:</strong> <?= date('d/m/Y H:i', strtotime($revision['fecha_revision'])) ?></p>
+                        <p><strong>Por:</strong> <?= htmlspecialchars($revision['nombre_revisor']) ?></p>                            
                     <?php endif; ?>
-                </div>
-                </div>
 
-                <?php if ($tieneDatos): ?>
+                </div>
+            </div>
+
+            <?php if ($tieneDatos): ?>
                 <!-- Datos de capacitaciones -->
                 <div class="info-card">
                     <h6><i class="bi bi-mortarboard me-2"></i>Capacitaciones</h6>
@@ -213,7 +231,7 @@ include '../../includes/header.php';
                             <?php if ($datosReporte['archivo_cronograma']): ?>
                             <p><strong>Cronograma:</strong> 
                                 <a href="../../procesos/generador/soportes_generador/<?= $datosReporte['archivo_cronograma'] ?>" 
-                                   target="_blank" class="btn btn-sm btn-outline btn-outline-primary">
+                                   target="_blank" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-download me-2"></i>Ver archivo
                                 </a>
                             </p>
@@ -225,7 +243,7 @@ include '../../includes/header.php';
                             <p><strong>Número de personas capacitadas:</strong> <?= $datosReporte['num_empleados_capacitados'] ?></p>
                             <p><strong>Soportes:</strong> 
                                 <a href="../../procesos/generador/soportes_generador/<?= $datosReporte['archivo_soportes_capacitaciones'] ?>" 
-                                   target="_blank" class="btn btn-sm btn-outline btn-outline-primary">
+                                   target="_blank" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-download me-2"></i>Ver archivos
                                 </a>
                             </p>
@@ -253,7 +271,7 @@ include '../../includes/header.php';
                                     <li><?= $listaAcciones[$accionKey] ?></li>
                                     <?php endif; ?>
                                 <?php endforeach; ?>
-                                </ul>
+                            </ul>
                             <?php endif; ?>
                             
                             <?php if (!empty($datosReporte['otra_accion_preventiva'])): ?>
@@ -265,24 +283,50 @@ include '../../includes/header.php';
 
                 <!-- Datos de auditorías -->
                 <div class="info-card">
-                    <h6><i class="bi bi-clipboard-data me-2"></i>Auditorías</h6>
+                    <h6 style="background-color: #fdcaca5d;"><i class="bi bi-clipboard-data me-2"></i>Auditorías internas</h6>
                     <div class="row">
                         <div class="col-md-6">
-                            <p><strong>Número de auditorías:</strong> <?= $datosReporte['num_auditorias'] ?></p>
-                            <?php if ($datosReporte['archivo_resultados_auditorias']): ?>
-                            <p><strong>Resultados de auditorías:</strong> 
-                                <a href="../../procesos/generador/soportes_generador/<?= $datosReporte['archivo_resultados_auditorias'] ?>" 
-                                   target="_blank" class="btn btn-sm btn-outline btn-outline-primary">
+                            <p><strong>Número de auditorías internas:</strong> <?= $datosReporte['num_auditorias_internas'] ?></p>
+                            <?php if ($datosReporte['archivo_resultados_auditorias_internas']): ?>
+                            <p><strong>Resultados de auditorías internas:</strong> 
+                                <a href="../../procesos/generador/soportes_generador/<?= $datosReporte['archivo_resultados_auditorias_internas'] ?>" 
+                                   target="_blank" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-download me-2"></i>Ver archivo
                                 </a>
                             </p>
                             <?php endif; ?>
                         </div>
                         <div class="col-md-6">
-                            <?php if ($datosReporte['archivo_plan_mejoramiento']): ?>
-                            <p><strong>Plan de mejoramiento:</strong> 
-                                <a href="../../procesos/generador/soportes_generador/<?= $datosReporte['archivo_plan_mejoramiento'] ?>" 
-                                   target="_blank" class="btn btn-sm btn-outline btn-outline-primary">
+                            <?php if ($datosReporte['archivo_plan_mejoramiento_interno']): ?>
+                            <p><strong>Plan de mejoramiento interno:</strong> 
+                                <a href="../../procesos/generador/soportes_generador/<?= $datosReporte['archivo_plan_mejoramiento_interno'] ?>" 
+                                   target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-download me-2"></i>Ver archivo
+                                </a>
+                            </p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <h6 style="background-color: #cee2f8ff;"><i class="bi bi-clipboard-data me-2"></i>Auditorías externas</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Número de auditorías externas:</strong> <?= $datosReporte['num_auditorias_externas'] ?></p>
+                            <?php if ($datosReporte['archivo_resultados_auditorias_externas']): ?>
+                            <p><strong>Resultados de auditorías externas:</strong> 
+                                <a href="../../procesos/generador/soportes_generador/<?= $datosReporte['archivo_resultados_auditorias_externas'] ?>" 
+                                   target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-download me-2"></i>Ver archivo
+                                </a>
+                            </p>
+                            <?php endif; ?>
+                        </div>
+                        <div class="col-md-6">
+                            <?php if ($datosReporte['archivo_plan_mejoramiento_externas']): ?>
+                            <p><strong>Plan de mejoramiento externo:</strong> 
+                                <a href="../../procesos/generador/soportes_generador/<?= $datosReporte['archivo_plan_mejoramiento_externas'] ?>" 
+                                   target="_blank" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-download me-2"></i>Ver archivo
                                 </a>
                             </p>
@@ -291,109 +335,113 @@ include '../../includes/header.php';
                     </div>
                 </div>
 
-                <?php else: ?>
+            <?php else: ?>
                 <div class="alert alert-warning">
                     <i class="bi bi-exclamation-triangle me-2"></i>
-                    No se ha encontrado información para este año.
+                    <strong>No hay datos diligenciados</strong><br>
+                    El generador aún no ha completado el formulario de capacitaciones, accidentes y auditorías para el año <?= $anio ?>.
+                    No es posible realizar una revisión hasta que el generador diligencie la información.
                 </div>
-                <?php endif; ?>
+            <?php endif; ?>
 
-                <!-- Formulario de revisión -->
-                <form method="POST" class="mt-4">
-                    <input type="hidden" name="generador_id" value="<?= $generador_id ?>">
-                    <input type="hidden" name="anio" value="<?= $anio ?>">
-                    
-                    <div class="card">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Evaluación del Administrador</h6>
-                        </div>
-                        <div class="card-body">
-                            <?php if ($formularioBloqueado): ?>
-                                <!-- Mostrar alerta cuando está bloqueado -->                                
-                                <div class="alert alert-warning">
-                                    <i class="bi bi-lock-fill me-2"></i>
-                                    <strong>Revisión <?= $estaFinalizado ? 'Finalizada' : 'Bloqueada' ?></strong> - 
-                                    <?php if ($estaFinalizado): ?>
-                                        Esta revisión ya ha sido completada y no puede ser modificada.
-                                    <?php else: ?>
-                                        Este formulario ya tiene un estado definitivo (<?= ucfirst($estadoAccidentes) ?>) y no puede ser modificado.
-                                    <?php endif; ?>
-                                    <?php if ($estaFinalizado && $revision['estado_general'] === 'aprobado'): ?>
-                                        El certificado fue enviado al generador.
-                                    <?php elseif ($estaFinalizado): ?>
-                                        Las observaciones fueron enviadas al generador.
-                                    <?php endif; ?>
-                                </div>
-                                
-                                <!-- Campos deshabilitados -->
-                                <fieldset disabled>
-                                    <div class="mb-3">
-                                        <label class="form-label">Estado del formulario:</label>
-                                        <select name="estado" class="form-select">
-                                            <option value="<?= $revision['formulario_accidentes'] ?>" selected>
-                                                <?= ucfirst($revision['formulario_accidentes']) ?>
-                                            </option>
-                                        </select>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Observaciones:</label>
-                                        <textarea name="observaciones" class="form-control" rows="4"><?= htmlspecialchars($revision['observaciones_accidentes'] ?? '') ?></textarea>
-                                    </div>
-
-                                    <div class="d-flex justify-content-between">
-                                        <a href="listado_revisiones_view.php" class="btn btn-outline-secondary">
-                                            <i class="bi bi-arrow-left me-2"></i>Volver
-                                        </a>
-                                        <button type="button" class="btn btn-secondary">
-                                            <i class="bi bi-lock me-2"></i>Formulario Bloqueado
-                                        </button>
-                                    </div>
-                                </fieldset>
-                                
-                            <?php else: ?>
-                                <!-- ✅ NUEVO: Mostrar advertencia si no permite más correcciones -->
-                                <?php if (!$permiteCorreccion && $estadoGeneral === 'rechazado'): ?>
-                                <div class="alert alert-danger">
-                                    <i class="bi bi-exclamation-triangle me-2"></i>
-                                    <strong>ÚNICA OPORTUNIDAD DE CORRECCIÓN ALCANZADA</strong> - El generador ha agotado su única oportunidad de corrección. 
-                                    <strong>No puede rechazar este formulario nuevamente.</strong>
-                                </div>
-                                <?php endif; ?>  
-                                <!-- Formulario normal cuando hay datos y NO está bloqueado -->
+            <!-- Formulario de revisión -->
+            <form method="POST" class="mt-4">
+                <input type="hidden" name="generador_id" value="<?= $generador_id ?>">
+                <input type="hidden" name="anio" value="<?= $anio ?>">
+                
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Evaluación del Administrador</h6>
+                    </div>
+                    <div class="card-body">
+                        <?php if ($formularioBloqueado): ?>
+                            <!-- Mostrar alerta cuando está bloqueado -->
+                            <div class="alert alert-warning">
+                                <i class="bi bi-lock-fill me-2"></i>
+                                <strong>Revisión <?= $estaFinalizado ? 'Finalizada' : 'Bloqueada' ?></strong> - 
+                                <?= $mensajeBloqueo ?>
+                                <?php if (!$tieneDatos): ?>
+                                    <br><br>
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    <small>El formulario estará disponible para revisión una vez el generador diligencie la información requerida.</small>
+                                <?php endif; ?>
+                                <?php if ($estaFinalizado && $revision['estado_general'] === 'aprobado'): ?>
+                                    <br><br>
+                                    El certificado fue enviado al generador.
+                                <?php elseif ($estaFinalizado && $revision['estado_general'] === 'rechazado'): ?>
+                                    <br><br>
+                                    Las observaciones fueron enviadas al generador.
+                                <?php endif; ?>
+                            </div>
+                            
+                            <!-- Campos deshabilitados -->
+                            <fieldset disabled>
                                 <div class="mb-3">
                                     <label class="form-label">Estado del formulario:</label>
-                                    <select name="estado" class="form-select" required>
-                                        <option value="">Seleccione un estado...</option>
-                                        <option value="aprobado" <?= $revision['formulario_accidentes'] === 'aprobado' ? 'selected' : '' ?>>Aprobado</option>
-                                        <option value="rechazado" <?= $revision['formulario_accidentes'] === 'rechazado' ? 'selected' : '' ?>>Rechazado</option>
+                                    <select name="estado" class="form-select">
+                                        <option value="<?= $revision['formulario_accidentes'] ?? 'sin_datos' ?>" selected>
+                                            <?= ucfirst($revision['formulario_accidentes'] ?? 'Sin datos') ?>
+                                        </option>
                                     </select>
                                 </div>
 
                                 <div class="mb-3">
                                     <label class="form-label">Observaciones:</label>
                                     <textarea name="observaciones" class="form-control" rows="4" 
-                                            placeholder="Ingrese observaciones sobre la revisión..."><?= htmlspecialchars($revision['observaciones_accidentes'] ?? '') ?></textarea>
+                                              placeholder="No disponible mientras el formulario esté bloqueado"><?= htmlspecialchars($revision['observaciones_accidentes'] ?? '') ?></textarea>
                                 </div>
 
                                 <div class="d-flex justify-content-between">
                                     <a href="listado_revisiones_view.php" class="btn btn-outline-secondary">
                                         <i class="bi bi-arrow-left me-2"></i>Volver
                                     </a>
-                                    <button type="submit" class="btn btn-success">
-                                        <i class="bi bi-check-circle me-2"></i>Guardar Revisión
+                                    <button type="button" class="btn btn-secondary">
+                                        <i class="bi bi-lock me-2"></i>
+                                        <?= !$tieneDatos ? 'Formulario sin datos' : 'Formulario Bloqueado' ?>
                                     </button>
                                 </div>
+                            </fieldset>
+                            
+                        <?php else: ?>
+                            <!-- Mostrar advertencia si no permite más correcciones -->
+                            <?php if (!$permiteCorreccion && $estadoGeneral === 'rechazado'): ?>
+                                <div class="alert alert-danger">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    <strong>ÚNICA OPORTUNIDAD DE CORRECCIÓN ALCANZADA</strong> - El generador ha agotado su única oportunidad de corrección. 
+                                    <strong>No puede rechazar este formulario nuevamente.</strong>
+                                </div>
                             <?php endif; ?>
-                        </div>
+                            
+                            <!-- Formulario normal cuando hay datos y NO está bloqueado -->
+                            <div class="mb-3">
+                                <label class="form-label">Estado del formulario:</label>
+                                <select name="estado" class="form-select" required>
+                                    <option value="">Seleccione un estado...</option>
+                                    <option value="aprobado" <?= $revision['formulario_accidentes'] === 'aprobado' ? 'selected' : '' ?>>Aprobado</option>
+                                    <option value="rechazado" <?= $revision['formulario_accidentes'] === 'rechazado' ? 'selected' : '' ?>>Rechazado</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Observaciones:</label>
+                                <textarea name="observaciones" class="form-control" rows="4" 
+                                        placeholder="Ingrese observaciones sobre la revisión..."><?= htmlspecialchars($revision['observaciones_accidentes'] ?? '') ?></textarea>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a href="listado_revisiones_view.php" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left me-2"></i>Volver
+                                </a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-circle me-2"></i>Guardar Revisión
+                                </button>
+                            </div>
+                        <?php endif; ?>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
-    <!-- Footer -->
-    <?php include '../../includes/footer.php'; ?>
-    
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<?php include '../../includes/footer.php'; ?>

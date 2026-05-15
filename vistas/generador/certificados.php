@@ -54,19 +54,17 @@ include '../../includes/header.php';
 <!-- Contenedor principal -->
 <div class="container my-4">
     <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="mb-3">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="../dashboard.php">Dashboard</a></li>
-            <li class="breadcrumb-item active">Certificados</li>
-        </ol>
-    </nav>
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-file-pdf me-2 text-danger"></i>Certificados de Aprobación</h2>
-        <a href="../dashboard.php" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-arrow-left me-2"></i>Volver al Dashboard
-        </a>
-    </div>
+    <nav class="mb-3">
+        <div class="nav nav-tabs custom-tabs" role="tablist">
+            <a class="nav-link" href="../dashboard.php">
+                <i class="bi bi-speedometer2 me-1"></i>Dashboard
+            </a>
+            <a class="nav-link active" href="#">
+                <i class="bi bi-file-pdf me-1"></i>Cetificados
+            </a>
+            
+        </div>
+    </nav>  
 
     <!-- Tarjeta informativa -->
     <div class="card mb-4" style="background-color: #f8f4ceff;">

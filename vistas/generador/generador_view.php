@@ -32,12 +32,19 @@ include '../../includes/header.php';
     <!-- Contenedor principal -->
     <div class="container my-4">
         <!-- Breadcrumb -->
-        <nav aria-label="breadcrumb" class="mb-3">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="../dashboard.php">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="listado_generadores_view.php">Mis Establecimientos</a></li>
-                <li class="breadcrumb-item active"><?= isset($generadorExistente['id']) ? 'Editar' : 'Nuevo' ?> Establecimiento</li>
-            </ol>
+        <nav class="mb-3">
+            <div class="nav nav-tabs custom-tabs" role="tablist">
+                <a class="nav-link" href="../dashboard.php">
+                    <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                </a>
+                <a class="nav-link" href="listado_generadores_view.php">
+                    <i class="bi bi-building me-1"></i>Mis Establecimientos
+                </a>
+                <a class="nav-link active" href="#">
+                    <i class="bi bi-<?= isset($generadorExistente['id']) ? 'pencil' : 'plus-circle' ?> me-1"></i>
+                    <?= isset($generadorExistente['id']) ? 'Editar' : 'Nuevo' ?> Establecimiento
+                </a>
+            </div>
         </nav>
 
         <div class="d-flex justify-content-between align-items-center mb-4">

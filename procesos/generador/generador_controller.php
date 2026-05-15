@@ -1,15 +1,39 @@
 <?php
 session_start();
-require_once '../../includes/conexion.php';
-// ✅ NUEVO: Incluir el controlador de revisiones
-require_once '../../procesos/admin/revisiones_controller.php';
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$conn = null;
+require_once __DIR__ . '/../../includes/conexion.php';
+if (!$conn) {
+    throw new Exception("No se pudo establecer una conexión con la base de datos.");
+}
+require_once __DIR__ . '/../../procesos/admin/revisiones_controller.php';
 
 class GeneradorController {
     private $conn;
     public $error;
     public $success;
 
+    // ✅ UN SOLO CONSTRUCTOR (con la validación)
+    public function __construct($conn) {
+        if (!$conn) {
+            throw new Exception("No se recibió una conexión válida a la base de datos");
+        }
+        $this->conn = $conn;
+    }
+
+    private function verificarConexion() {
+        if (!$this->conn) {
+            $this->error = "Error de conexión a la base de datos";
+            return false;
+        }
+        return true;
+    }
+
     public function getTiposGenerador() {
+        if (!$this->verificarConexion()) return [];
+        
         try {
             $stmt = $this->conn->query("SELECT id as id_sujeto, nom_sujeto FROM categoria ORDER BY nom_sujeto");
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -18,10 +42,11 @@ class GeneradorController {
             return [];
         }
     }
-
     
     // Método para obtener subcategorías por id_sujeto
     public function getSubcategoriasPorSujeto($id_sujeto) {
+        if (!$this->verificarConexion()) return [];
+        
         try {
             $stmt = $this->conn->prepare("SELECT id, nom_clase FROM subcategoria WHERE id_sujeto = ? ORDER BY nom_clase");
             $stmt->execute([$id_sujeto]);
@@ -34,18 +59,17 @@ class GeneradorController {
     }
     
     public function obtenerGeneradorPorId($id) {
+        if (!$this->verificarConexion()) return null;
+        
         try {
             $stmt = $this->conn->prepare("SELECT * FROM generador WHERE id = ?");
             $stmt->execute([$id]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result ?: null;
         } catch (PDOException $e) {
             $this->error = "Error al obtener generador: " . $e->getMessage();
-            return [];
+            return null;
         }
-    }
-
-    public function __construct($conn) {
-        $this->conn = $conn;
     }
 
     public function checkAccess() {
@@ -63,12 +87,13 @@ class GeneradorController {
         }
     }
 
-    // ✅ NUEVO: Método para validar si puede enviar correcciones
+    // Método para validar si puede enviar correcciones
     public function puedeEnviarCorreccion($generador_id, $anio, $tipo_formulario) {
+        if (!$this->verificarConexion()) return ['puede_editar' => false, 'mensaje' => 'Error de conexión'];
+        
         try {
             $revisionController = new RevisionesController($this->conn);
             
-            // 1. Verificar que no esté finalizado
             if ($revisionController->estaFinalizado($generador_id, $anio)) {
                 return [
                     'puede_editar' => false,
@@ -76,7 +101,6 @@ class GeneradorController {
                 ];
             }
             
-            // 2. Verificar que tenga intentos disponibles
             if (!$revisionController->puedeReenviarCorreccion($generador_id, $anio)) {
                 return [
                     'puede_editar' => false,
@@ -84,7 +108,6 @@ class GeneradorController {
                 ];
             }
             
-            // 3. Verificar que el formulario específico esté rechazado
             $estado = $revisionController->obtenerEstadoFormulario($generador_id, $anio, $tipo_formulario);
             
             if ($estado !== 'rechazado') {
@@ -108,12 +131,13 @@ class GeneradorController {
         }
     }
 
-    // ✅ NUEVO: Método para validar envío inicial (cuando no es corrección)
+    // Método para validar envío inicial
     public function puedeEnviarFormulario($generador_id, $anio, $tipo_formulario) {
+        if (!$this->verificarConexion()) return ['puede_editar' => false, 'mensaje' => 'Error de conexión'];
+        
         try {
             $revisionController = new RevisionesController($this->conn);
             
-            // 1. Verificar que no esté finalizado
             if ($revisionController->estaFinalizado($generador_id, $anio)) {
                 return [
                     'puede_editar' => false,
@@ -121,10 +145,8 @@ class GeneradorController {
                 ];
             }
             
-            // 2. Verificar el estado del formulario
             $estado = $revisionController->obtenerEstadoFormulario($generador_id, $anio, $tipo_formulario);
             
-            // Permitir solo si está pendiente o sin_datos (envío inicial)
             if ($estado === 'pendiente' || $estado === 'sin_datos') {
                 return [
                     'puede_editar' => true,
@@ -132,7 +154,6 @@ class GeneradorController {
                 ];
             }
             
-            // Si está aprobado, no permitir edición
             if ($estado === 'aprobado') {
                 return [
                     'puede_editar' => false,
@@ -140,7 +161,6 @@ class GeneradorController {
                 ];
             }
             
-            // Si está rechazado, usar la validación de correcciones
             if ($estado === 'rechazado') {
                 return $this->puedeEnviarCorreccion($generador_id, $anio, $tipo_formulario);
             }
@@ -159,8 +179,10 @@ class GeneradorController {
         }
     }
 
-    // Función para verificar si ya existe un generador con el mismo nombre y NIT
+    // Función para verificar si ya existe un generador
     private function existeGenerador($nom_generador, $nit, $excluir_id = null) {
+        if (!$this->verificarConexion()) return false;
+        
         try {
             $sql = "SELECT COUNT(*) as count FROM generador 
                     WHERE nom_generador = ? AND nit = ?";
@@ -185,35 +207,35 @@ class GeneradorController {
     }
 
     private function processForm() {
-    try {
-        // Validar campos requeridos (agregar id_comuna)
-        $campos_requeridos = [
-            'periodo_reporte', 'nom_generador', 'nit', 
-            'tipo_sujeto', 'dir_establecimiento', 'nom_responsable', 'id_comuna'
-        ];
+        if (!$this->verificarConexion()) return;
         
-        foreach ($campos_requeridos as $campo) {
-            if (empty($_POST[$campo])) {
-                $this->error = "El campo " . str_replace('_', ' ', $campo) . " es requerido.";
-                return;
-            }
-        }
-        
-        $nom_generador = trim($_POST['nom_generador']);
-        $nit = trim($_POST['nit']);
-        $id_comuna = $_POST['id_comuna'];
-        
-        // Verificar si estamos actualizando un generador existente
-        if (isset($_POST['id_generador']) && is_numeric($_POST['id_generador'])) {
-            $id_generador = $_POST['id_generador'];
+        try {
+            // Validar campos requeridos
+            $campos_requeridos = [
+                'periodo_reporte', 'nom_generador', 'nit', 
+                'tipo_sujeto', 'dir_establecimiento', 'nom_responsable', 'id_comuna'
+            ];
             
-                // Verificar si ya existe otro generador con el mismo nombre y NIT
+            foreach ($campos_requeridos as $campo) {
+                if (empty($_POST[$campo])) {
+                    $this->error = "El campo " . str_replace('_', ' ', $campo) . " es requerido.";
+                    return;
+                }
+            }
+            
+            $nom_generador = trim($_POST['nom_generador']);
+            $nit = trim($_POST['nit']);
+            $id_comuna = $_POST['id_comuna'];
+            
+            // Verificar si estamos actualizando un generador existente
+            if (isset($_POST['id_generador']) && is_numeric($_POST['id_generador'])) {
+                $id_generador = $_POST['id_generador'];
+                
                 if ($this->existeGenerador($nom_generador, $nit, $id_generador)) {
                     $this->error = "Ya existe un establecimiento registrado con el nombre '$nom_generador' y NIT '$nit'. Verifique los datos e intente nuevamente.";
                     return;
                 }
                 
-                // Actualizar generador existente (agregar id_comuna)
                 $stmt = $this->conn->prepare("UPDATE generador SET
                     periodo_reporte = ?, 
                     nom_generador = ?,
@@ -246,13 +268,11 @@ class GeneradorController {
                 $_SESSION['mensaje_exito'] = "Generador actualizado exitosamente!";
                 
             } else {
-                // Crear nuevo generador - Verificar si ya existe
                 if ($this->existeGenerador($nom_generador, $nit)) {
                     $this->error = "Ya existe un establecimiento registrado con el nombre '$nom_generador' y NIT '$nit'. Verifique los datos e intente nuevamente.";
                     return;
                 }
                 
-                // Crear nuevo generador (agregar id_comuna)
                 $stmt = $this->conn->prepare("INSERT INTO generador (
                     periodo_reporte, 
                     nom_generador, 
@@ -283,7 +303,6 @@ class GeneradorController {
 
                 $id_generador = $this->conn->lastInsertId();
 
-                // Asociar el generador al usuario en la tabla de relación
                 if ($_SESSION['usuario_rol'] === 'generador') {
                     $stmt = $this->conn->prepare("INSERT INTO usuario_generador (usuario_id, generador_id) VALUES (?, ?)");
                     $stmt->execute([$_SESSION['usuario_id'], $id_generador]);
@@ -297,11 +316,14 @@ class GeneradorController {
 
         } catch (PDOException $e) {
             $this->error = "Error al procesar el formulario: " . $e->getMessage();
+            error_log("Error en processForm: " . $e->getMessage());
         }
     }
     
     // función para obtener los barrios
     public function obtenerBarrios() {
+        if (!$this->verificarConexion()) return [];
+        
         try {
             $stmt = $this->conn->query("SELECT b.id, b.nom_barrio, b.id_comuna, c.nom_comuna 
                                     FROM barrio b 
@@ -316,6 +338,11 @@ class GeneradorController {
 }
 
 // Uso del controlador
-$controller = new GeneradorController($conn);
-$controller->handleRequest();
+try {
+    $controller = new GeneradorController($conn);
+    $controller->handleRequest();
+} catch (Exception $e) {
+    error_log("Error inicializando controlador: " . $e->getMessage());
+    die("Error de configuración del sistema. Contacte al administrador.");
+}
 ?>

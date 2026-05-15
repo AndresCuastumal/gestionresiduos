@@ -132,31 +132,42 @@ if (!$reporte_bloqueado) {
     <!-- Contenedor principal -->
     <div class="container my-4">
         <!-- Breadcrumb -->
-        <nav aria-label="breadcrumb" class="mb-3">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="../dashboard.php">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="listado_generadores_view.php">Mis Establecimientos</a></li>
-                
-                <?php if ($menu_navegacion_activo || $reporte_bloqueado): ?>
-                    <!-- Menú completo activo cuando los tres formularios están llenos -->
-                    <li class="breadcrumb-item"><a href="reporte_mensual_view.php?id=<?= $generador_id ?>">Reporte Mensual de residuos</a></li>
-                    <li class="breadcrumb-item active"><b><u>Capacitaciones, accidentes y auditorías</u></b></li>
-                    <li class="breadcrumb-item"><a href="reporte_contingencias_view.php?id=<?= $generador_id ?>">Plan de Contingencias</a></li>
-                <?php else: ?>
-                    <!-- Menú simplificado cuando no están todos completos -->
-                    <li class="breadcrumb-item"><a href="reporte_mensual_view.php?id=<?= $generador_id ?>">Reporte Mensual de residuos</a></li>
-                    <li class="breadcrumb-item active"><b><u>Capacitaciones, Accidentes y Auditorías</u></b></li>
-                    <?php if($estado_formulario_accidentes=='pendiente'): ?>
-                        <li class="breadcrumb-item"><a href="reporte_contingencias_view.php?id=<?= $generador_id ?>">Plan de Contingencias</a></li>
-                    <?php endif; ?> 
-                <?php endif; ?>
-            </ol>
+        <nav class="mb-3">
+            <div class="nav nav-tabs custom-tabs" role="tablist">
+                    <a class="nav-link" href="reporte_mensual_view.php?id=<?= $generador_id ?>">
+                        <i class="bi bi-clipboard-data me-1"></i>Reporte Mensual de residuos
+                    </a>
+                    <a class="nav-link active" aria-current="page" href="#">
+                        <i class="bi bi-clipboard-check me-2"></i></i>Capacitaciones, accidentes y auditorías
+                    </a>
+                    <?php if ($estado_formulario_accidentes == 'sin_datos'): ?>
+                        <a class="nav-link disabled" href="#" onclick="return false;" 
+                        style="color: #6c757d; pointer-events: none; opacity: 0.65;">
+                            <i class="bi bi-exclamation-triangle me-1"></i>Plan de Contingencias
+                        </a>
+                    <?php else: ?>
+                    <a class="nav-link" href="reporte_contingencias_view.php?id=<?= $generador_id ?>">
+                        <i class="bi bi-exclamation-triangle me-1"></i>Plan de Contingencias
+                    </a>  
+                    <?php endif; ?>              
+            </div>
         </nav>
+        <!-- Mensaje informativo cuando las pestañas están deshabilitadas -->
+        <?php if ($estado_formulario_accidentes == 'sin_datos'): ?>
+            <div class="alert alert-warning alert-dismissible fade show mb-4">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <strong>¡Atención!</strong>
+                <p class="mb-0 mt-2">
+                    Debe completar el formulario de <strong>Capacitaciones, Accidentes y Auditorías</strong> antes de acceder al formulario de Plan de Contingencias.
+                </p>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="bi bi-clipboard-check me-2"></i>Capacitaciones, Accidentes y Auditorías</h2>
-            <a href="reporte_mensual_view.php?id=<?= $generador_id ?>" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-arrow-left me-2"></i>Volver
+            <a href="listado_generadores_view.php" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Mis Establecimientos
             </a>
         </div>
 
@@ -166,15 +177,7 @@ if (!$reporte_bloqueado) {
                 <p class="mb-0"><strong>Establecimiento:</strong> <?= htmlspecialchars($generador['nom_generador']) ?></p>
             </div>
         </div>
-
-        <!-- Mensaje de confirmación del primer formulario -->
-        <?php if ($estado_formulario_mensual == 'pendiente' && $estado_formulario_accidentes == 'sin_datos'): ?>
-            <div class="alert alert-success mb-4">
-                <i class="bi bi-check-circle-fill me-2"></i>
-                <strong>¡Datos guardados exitosamente!</strong> Los datos del reporte mensual de residuos para el año <?= $anio_actual ?> han sido guardados correctamente. 
-                Ahora complete la información adicional sobre capacitaciones, accidentes y auditorías.
-            </div>
-        <?php endif; ?>
+        
         <!-- Tarjeta informativa -->
         <div class="info-card mt-4" style="background-color: #cee2f8ff;">
             <h6><i class="bi bi-info-circle me-2"></i>Instrucciones</h6>            
@@ -446,35 +449,32 @@ if (!$reporte_bloqueado) {
                             Asegúrese de haber realizado al menos una auditoría interna sobre la gestión de residuos
                             durante el año <?= $anio_actual ?>.
                         </p>
-                        
+                        <h6 style="background-color: #fdcaca5d;"><i class="bi bi-clipboard2-data me-2"></i>Auditorías Internas</h6>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">
-                                    Número de auditorías internas y/o externas realizadas sobre el manejo de residuos sólidos
+                                    Número de auditorías <strong>internas</strong> realizadas sobre el manejo de residuos sólidos
                                     <span class="text-danger">*</span>
                                 </label>
                                 <input type="number" class="form-control <?= !$modo_edicion ? 'bg-light' : '' ?>"
-                                       name="num_auditorias" 
+                                       name="num_auditorias_internas" 
                                        min="0" required
-                                       value="<?= $info_adicional['num_auditorias'] ?? '' ?>" <?= $readonly ?>
+                                       value="<?= $info_adicional['num_auditorias_internas'] ?? '' ?>" <?= $readonly ?>
                                         <?= !$modo_edicion ? 'style="background-color: #f8f9fa; border-color: #dee2e6;"' : '' ?>>
                             </div>
-                        </div>
-                        
-                        <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">
-                                    Resultados de las auditorías (PDF)
+                                    Resultados de la(s) auditoría(s) <strong>interna(s)</strong> (PDF)
                                     <?php if (!$info_adicional): ?><span class="text-danger">*</span><?php endif; ?>
                                 </label>
                                 <input type="file" class="form-control" 
-                                       name="archivo_resultados_auditorias" 
+                                       name="archivo_resultados_auditorias_internas" 
                                        accept=".pdf" <?= !$info_adicional ? 'required' : '' ?> <?= $disabled ?>
                                        <?= !$modo_edicion ? 'style="background-color: #f8f9fa; border-color: #dee2e6;"' : '' ?>>
-                                <div class="form-text">Acta(s) de auditorías realizadas</div>
-                                <?php if ($info_adicional && !empty($info_adicional['archivo_resultados_auditorias'])): ?>
+                                <div class="form-text">Acta(s) de auditoría(s) <strong>interna(s)</strong> realizada(s)</div>
+                                <?php if ($info_adicional && !empty($info_adicional['archivo_resultados_auditorias_internas'])): ?>
                                 <div class="form-text">
-                                    <a href="../../procesos/generador/soportes_generador/<?= $info_adicional['archivo_resultados_auditorias'] ?>" 
+                                    <a href="../../procesos/generador/soportes_generador/<?= $info_adicional['archivo_resultados_auditorias_internas'] ?>" 
                                        target="_blank" class="btn btn-sm btn-outline-primary mt-1">
                                         <i class="bi bi-download me-1"></i>Ver PDF actual
                                     </a>
@@ -488,13 +488,66 @@ if (!$reporte_bloqueado) {
                                     <?php if (!$info_adicional): ?><span class="text-danger">*</span><?php endif; ?>
                                 </label>
                                 <input type="file" class="form-control" 
-                                       name="archivo_plan_mejoramiento" 
+                                       name="archivo_plan_mejoramiento_interno" 
                                        accept=".pdf" <?= !$info_adicional ? 'required' : '' ?> <?= $disabled ?>
                                        <?= !$modo_edicion ? 'style="background-color: #f8f9fa; border-color: #dee2e6;"' : '' ?>>
-                                <div class="form-text">Plan de mejoramiento para el año evaluado</div>
-                                <?php if ($info_adicional && !empty($info_adicional['archivo_plan_mejoramiento'])): ?>
+                                <div class="form-text">Plan de mejoramiento de auditoría(s) <strong>interna(s)</strong> para el año evaluado</div>
+                                <?php if ($info_adicional && !empty($info_adicional['archivo_plan_mejoramiento_interno'])): ?>
                                 <div class="form-text">
-                                    <a href="../../procesos/generador/soportes_generador/<?= $info_adicional['archivo_plan_mejoramiento'] ?>" 
+                                    <a href="../../procesos/generador/soportes_generador/<?= $info_adicional['archivo_plan_mejoramiento_interno'] ?>" 
+                                       target="_blank" class="btn btn-sm btn-outline-primary mt-1">
+                                        <i class="bi bi-download me-1"></i>Ver PDF actual
+                                    </a>
+                                    <span class="ms-2 text-muted">Si no selecciona un nuevo archivo, se mantendrá el actual.</span>
+                                </div>
+                                <?php endif; ?>
+                            </div>                            
+                        </div>
+                        <h6 style="background-color: #cee2f8ff;"><i class="bi bi-clipboard2-data me-2"></i>Auditorías externas</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    Número de auditorías <strong>externas</strong> realizadas sobre el manejo de residuos sólidos                                    
+                                </label>
+                                <input type="number" class="form-control <?= !$modo_edicion ? 'bg-light' : '' ?>"
+                                       name="num_auditorias_externas" 
+                                       min="0" 
+                                       value="<?= $info_adicional['num_auditorias_externas'] ?? '' ?>" <?= $readonly ?>
+                                        <?= !$modo_edicion ? 'style="background-color: #f8f9fa; border-color: #dee2e6;"' : '' ?>>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    Resultados de la(s) auditoría(s) externa(s) (PDF)
+                                    <?php if (!$info_adicional): ?><?php endif; ?>
+                                </label>
+                                <input type="file" class="form-control" 
+                                       name="archivo_resultados_auditorias_externas" 
+                                       accept=".pdf" <?= !$info_adicional ? : '' ?> <?= $disabled ?>
+                                       <?= !$modo_edicion ? 'style="background-color: #f8f9fa; border-color: #dee2e6;"' : '' ?>>
+                                <div class="form-text">Acta(s) de auditoría(s) <strong>externa(s)</strong> realizada(s)</div>
+                                <?php if ($info_adicional && !empty($info_adicional['archivo_resultados_auditorias_externas'])): ?>
+                                <div class="form-text">
+                                    <a href="../../procesos/generador/soportes_generador/<?= $info_adicional['archivo_resultados_auditorias_externas'] ?>" 
+                                       target="_blank" class="btn btn-sm btn-outline-primary mt-1">
+                                        <i class="bi bi-download me-1"></i>Ver PDF actual
+                                    </a>
+                                    <span class="ms-2 text-muted">Si no selecciona un nuevo archivo, se mantendrá el actual.</span>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    Acciones correctivas y de mejoramiento (PDF)
+                                    <?php if (!$info_adicional): ?><?php endif; ?>
+                                </label>
+                                <input type="file" class="form-control" 
+                                       name="archivo_plan_mejoramiento_externas" 
+                                       accept=".pdf" <?= !$info_adicional ? : '' ?> <?= $disabled ?>
+                                       <?= !$modo_edicion ? 'style="background-color: #f8f9fa; border-color: #dee2e6;"' : '' ?>>
+                                <div class="form-text">Plan de mejoramiento de auditoría(s) <strong>externa(s)</strong> para el año evaluado</div>
+                                <?php if ($info_adicional && !empty($info_adicional['archivo_plan_mejoramiento_externas'])): ?>
+                                <div class="form-text">
+                                    <a href="../../procesos/generador/soportes_generador/<?= $info_adicional['archivo_plan_mejoramiento_externas'] ?>" 
                                        target="_blank" class="btn btn-sm btn-outline-primary mt-1">
                                         <i class="bi bi-download me-1"></i>Ver PDF actual
                                     </a>
@@ -513,7 +566,7 @@ if (!$reporte_bloqueado) {
                             con la temática de manejo de residuos</li>
                             <li>Los archivos de auditoría deben corresponder a las realizadas durante el año <?= $anio_actual ?></li>
                             <li>El estado de su reporte cambiará a "Pendiente de revisión"</li>
-                            <li>Recibirá una notificación cuando sea aprobado o rechazado</li>
+                            <li>Debe revisar periódicamente la plataforma para observar el estado de su reporte</li>
                         </ul>
                     </div>
                     
@@ -595,8 +648,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const fileInputs = [
         { id: 'archivo_cronograma', name: 'Cronograma de capacitaciones' },
         { id: 'archivo_soportes_capacitaciones', name: 'Soportes de capacitaciones' },
-        { id: 'archivo_resultados_auditorias', name: 'Resultados de auditorías' },
-        { id: 'archivo_plan_mejoramiento', name: 'Plan de mejoramiento' }
+        { id: 'archivo_resultados_auditorias_internas', name: 'Resultados de auditorías internas' },
+        { id: 'archivo_resultados_auditorias_externas', name: 'Resultados de auditorías externas' },
+        { id: 'archivo_plan_mejoramiento_interno', name: 'Plan de mejoramiento interno' },
+        { id: 'archivo_plan_mejoramiento_externas', name: 'Plan de mejoramiento externo' }
     ];
     
     // Crear mensajes de error para cada input

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../vendor/autoload.php';
 require_once '../../includes/conexion.php';
 require_once '../../procesos/admin/revisiones_controller.php';
 require_once '../../procesos/admin/reporte_mensual_controller.php';
@@ -95,18 +96,25 @@ include '../../includes/header.php';
     <!-- Contenedor principal -->
     <div class="container my-4">
         <!-- Breadcrumb -->
-        <nav aria-label="breadcrumb" class="mb-3">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="../dashboard.php">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="listado_revisiones_view.php">Revisiones</a></li>
-                <li class="breadcrumb-item active">Revisión - Reporte Mensual</li>
-            </ol>
+        <nav class="mb-3">
+            <div class="nav nav-tabs custom-tabs" role="tablist">                
+                <a class="nav-link active" href="#">
+                    <i class="bi bi-clipboard-data me-1"></i>Reporte Mensual de Residuos
+                </a>                
+                
+                <a class="nav-link" href="revisar_formulario_accidentes.php?generador_id=<?= $generador_id ?>&anio=<?= $anio ?>">
+                    <i class="bi bi-clipboard-check me-2"></i>Capacitaciones, accidentes y auditorías
+                </a>
+                <a class="nav-link" href="revisar_formulario_contingencias.php?generador_id=<?= $generador_id ?>&anio=<?= $anio ?>">
+                    <i class="bi bi-exclamation-triangle me-1"></i>Plan de Contingencias
+                </a>
+            </div>
         </nav>
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="bi bi-clipboard-check me-2"></i>Revisión - Reporte Mensual de Residuos</h2>
             <a href="listado_revisiones_view.php" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-arrow-left me-2"></i>Volver
+                <i class="bi bi-arrow-left me-2"></i>Lista de Establecimientos
             </a>
         </div>
 
@@ -136,7 +144,7 @@ include '../../includes/header.php';
                     <div class="col-md-6">
                         <h6 class="text-muted">Detalles de la Revisión</h6>
                         <p><strong>Año:</strong> <?= $anio ?></p>
-                        <p><strong>Estado actual:</strong> 
+                        <p><strong>Estado del formulario:</strong> 
                             <?php
                             $clase_estado = '';
                             switch ($revision['formulario_mensual']) {

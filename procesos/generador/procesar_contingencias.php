@@ -241,11 +241,19 @@ try {
             $stmt_check_revision = $conn->prepare("SELECT COUNT(*) FROM revisiones_anuales WHERE generador_id = ? AND anio = ?");
             $stmt_check_revision->execute([$generador_id, $anio]);
             $existe_revision = $stmt_check_revision->fetchColumn();
+            // y actualizar estado del formulario de contingencias a "pendiente" solo si ya existe registro
+            $stmt_update = $conn->prepare("UPDATE revisiones_anuales SET 
+                formulario_contingencias = 'pendiente',
+                fecha_revision = NULL,
+                revisado_por = NULL,
+                observaciones_contingencias = NULL
+                WHERE generador_id = ? AND anio = ?");
+            $stmt_update->execute([$generador_id, $anio]);
             
             if (!$existe_revision) {
                 $stmt_insert = $conn->prepare("INSERT INTO revisiones_anuales 
                     (generador_id, anio, formulario_contingencias, estado_general)
-                    VALUES (?, ?, 'sin_datos', 'incompleto')");
+                    VALUES (?, ?, 'pendiente', 'incompleto')");
                 $stmt_insert->execute([$generador_id, $anio]);
             }
         }

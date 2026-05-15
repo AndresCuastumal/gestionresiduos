@@ -1,5 +1,6 @@
 <?php
-
+require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/certificado_pdf_controller.php';
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 class RevisionesController {
@@ -514,6 +515,11 @@ class RevisionesController {
      * Calcular estado general basado en los tres formularios
      */
     private function calcularEstadoGeneral($mensual, $accidentes, $contingencias) {
+        // Si algún formulario tiene 'sin_datos', el estado es 'sin_datos' para efectos de filtro
+        if ($mensual === 'sin_datos' || $accidentes === 'sin_datos' || $contingencias === 'sin_datos') {
+            return 'sin_datos';
+        }
+        
         if ($mensual === 'rechazado' || $accidentes === 'rechazado' || $contingencias === 'rechazado') {
             return 'rechazado';
         }
@@ -593,7 +599,7 @@ class RevisionesController {
     }
     
     /**
-     * Obtener revisiones con filtros - SOLO para generadores que reportaron datos en 2024
+     * Obtener revisiones con filtros - Incluye manejo especial para estado 'sin_datos'
      */
     public function obtenerRevisionesConFiltros($tipo_sujeto = '', $estado_general = '', $busqueda = '') {
         
@@ -605,70 +611,77 @@ class RevisionesController {
                 g.nom_responsable, 
                 g.tipo_sujeto, 
                 s.nom_clase AS nom_tipo,
-                g.nit
+                g.nit,
+                -- Calcular si tiene al menos un formulario sin datos
+                CASE 
+                    WHEN r.formulario_mensual = 'sin_datos' 
+                    OR r.formulario_accidentes = 'sin_datos' 
+                    OR r.formulario_contingencias = 'sin_datos' 
+                    THEN 1 
+                    ELSE 0 
+                END as tiene_sin_datos
             FROM revisiones_anuales r
             JOIN generador g ON r.generador_id = g.id
             JOIN subcategoria s ON g.tipo_sujeto = s.id
             WHERE r.anio = ?
-            AND r.formulario_mensual != 'sin_datos'
-            AND r.formulario_accidentes != 'sin_datos' 
-            AND r.formulario_contingencias != 'sin_datos'
         ";
         
         $params = [$anio_revision];
         
+        // Filtro por tipo de sujeto
         if (!empty($tipo_sujeto)) {
             $sql .= " AND g.tipo_sujeto = ?";
             $params[] = $tipo_sujeto;
         }
         
-        if (!empty($estado_general)) {
+        // FILTRO ESPECIAL PARA 'sin_datos'
+        if ($estado_general === 'sin_datos') {
+            // Buscar establecimientos que tengan al menos un formulario sin datos
+            $sql .= " AND (r.formulario_mensual = 'sin_datos' 
+                        OR r.formulario_accidentes = 'sin_datos' 
+                        OR r.formulario_contingencias = 'sin_datos')";
+        } 
+        // Filtro normal para otros estados
+        elseif (!empty($estado_general)) {
             $sql .= " AND r.estado_general = ?";
             $params[] = $estado_general;
         }
-
-        // FORZAR LA BÚSQUEDA PARA DEPURAR
-        error_log("=== APLICANDO FILTRO DE BÚSQUEDA ===");
-        error_log("Valor de busqueda antes de procesar: '" . $busqueda . "'");
         
+        // Filtro de búsqueda
         if (!empty($busqueda)) {
             $sql .= " AND (g.nom_generador LIKE ? OR g.nit LIKE ?)";
             $busquedaParam = "%" . $busqueda . "%";
             $params[] = $busquedaParam;
             $params[] = $busquedaParam;
-            
-            error_log("SQL después de agregar búsqueda: " . $sql);
-            error_log("Parámetros a ejecutar: " . print_r($params, true));
-            error_log("busquedaParam: " . $busquedaParam);
-        } else {
-            error_log("⚠️ BÚSQUEDA ESTÁ VACÍA - No se aplicará filtro");
         }
         
-        $sql .= " ORDER BY g.nom_generador ASC, r.fecha_revision DESC";
-        
-        error_log("SQL FINAL: " . $sql);
+        $sql .= " ORDER BY 
+                    CASE 
+                        WHEN r.formulario_mensual = 'sin_datos' 
+                        OR r.formulario_accidentes = 'sin_datos' 
+                        OR r.formulario_contingencias = 'sin_datos'
+                        THEN 0 ELSE 1 END,
+                    g.nom_generador ASC";
         
         $stmt = $this->conn->prepare($sql);
-        
-        // Depuración adicional: muestra los bindings
-        if (!empty($params)) {
-            error_log("Ejecutando con " . count($params) . " parámetros");
-            for ($i = 0; $i < count($params); $i++) {
-                error_log("Parámetro " . ($i+1) . ": '" . $params[$i] . "'");
-            }
-        }
-        
-        $resultado = $stmt->execute($params);
-        
-        if (!$resultado) {
-            error_log("❌ ERROR en execute: " . print_r($stmt->errorInfo(), true));
-        }
-        
+        $stmt->execute($params);
         $revisiones = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        error_log("Resultados encontrados: " . count($revisiones));
+        
+        // Calcular el estado general real para cada revisión
+        foreach ($revisiones as &$revision) {
+            $revision['estado_general_calculado'] = $this->calcularEstadoGeneral(
+                $revision['formulario_mensual'],
+                $revision['formulario_accidentes'],
+                $revision['formulario_contingencias']
+            );
+        }
+        
+        error_log("Resultados encontrados con filtros: " . count($revisiones));
+        error_log("Filtro estado: " . ($estado_general ?: 'ninguno'));
         
         return $revisiones;
     }
+
     
     /**
      * Verificar si existe registro de revisión para un generador y año

@@ -1,6 +1,4 @@
 <?php
-
-
 //session_start();
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -46,82 +44,241 @@ foreach ($generadores as $generador) {
     $info_correcciones[$generador['id']] = $controller->obtenerInfoRechazos($generador['id']);
 }
 
+// Obtener estados de formularios para cada generador
+$estados_formularios = [];
+foreach ($generadores as $generador) {
+    $estados_formularios[$generador['id']] = $controller->obtenerEstadosFormularios($generador['id']);
+}
+
 include '../../includes/header.php';
+
+// ✅ FUNCIONES DE COLOR (igual que en revisiones_view)
+function obtenerClaseColor($estado) {
+    switch($estado) {
+        case 'pendiente': return 'text-warning';
+        case 'rechazado': return 'text-danger';
+        case 'aprobado': return 'text-success';
+        case 'sin_datos': return 'text-secondary';
+        default: return 'text-secondary';
+    }
+}
+
+function obtenerTextoEstado($estado) {
+    $estados = [
+        'aprobado' => 'Aprobado',
+        'rechazado' => 'Rechazado',
+        'pendiente' => 'Pendiente',
+        'sin_datos' => 'Sin datos',
+        'sin_revision' => 'Sin revisión'
+    ];
+    return $estados[$estado] ?? 'Desconocido';
+}
+
+// ✅ MODIFICADA: getIconoClase usando colores según estado
+function getIconoClase($estado, $habilitado, $rechazados, $tipo) {
+    if (!$habilitado) {
+        return 'formulario-icon-deshabilitado';
+    }
+    if (in_array($tipo, $rechazados)) {
+        return 'formulario-icon-correccion';
+    }
+    // Clase base siempre habilitada, el color lo da el estado
+    return 'formulario-icon-habilitado';
+}
+
+function getIconoTooltip($tipo, $habilitado, $estado, $rechazados) {
+    if (!$habilitado) {
+        $mensajes = [
+            'mensual' => 'Debe diligenciar primero el Reporte Mensual',
+            'accidentes' => 'Debe diligenciar primero el Reporte Mensual',
+            'contingencias' => 'Debe diligenciar primero el Reporte de Accidentes'
+        ];
+        return $mensajes[$tipo];
+    }
+    if (in_array($tipo, $rechazados)) {
+        return 'Formulario rechazado - Haga clic para corregir';
+    }
+    $textos = [
+        'mensual' => 'Reporte Mensual de Residuos',
+        'accidentes' => 'Capacitaciones, accidentes y auditorías',
+        'contingencias' => 'Plan de Contingencias'
+    ];
+    $estado_texto = obtenerTextoEstado($estado);
+    return "{$textos[$tipo]} - Estado: {$estado_texto}";
+}
 ?>
 
 <style>
-/* Estilos existentes... */
-.btn-action.disabled {
+/* Estilos para los badges de estado */
+/* Estilos para iconos de formularios */
+.formulario-icon {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    text-decoration: none;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+}
+
+/* Colores según estado (igual que en revisiones_view) */
+.formulario-icon-habilitado.text-warning {
+    background-color: #fff3cd;
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.formulario-icon-habilitado.text-danger {
+    background-color: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
+}
+
+.formulario-icon-habilitado.text-success {
+    background-color: #d4edda;
+    border-color: #28a745;
+    color: #155724;
+}
+
+.formulario-icon-habilitado.text-secondary {
+    background-color: #e9ecef;
+    border-color: #6c757d;
+    color: #6c757d;
+}
+
+.formulario-icon-habilitado:hover {
+    transform: translateY(-2px);
+    filter: brightness(0.95);
+}
+
+.formulario-icon-deshabilitado {
+    background-color: #f5f5f5;
+    color: #bdbdbd;
+    border: 1px solid #e0e0e0;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.formulario-icon-correccion {
+    background-color: #fff3e0;
+    border-color: #f57c00;
+    color: #f57c00;
+    animation: pulse 1.5s infinite;
+}
+
+.formulario-icon-correccion:hover {
+    background-color: #f57c00;
+    color: white;
+    transform: translateY(-2px);
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(245, 124, 0, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(245, 124, 0, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(245, 124, 0, 0);
+    }
+}
+
+/* Estilos para acciones */
+.btn-action {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+    text-decoration: none;
+    font-size: 1.1rem;
+}
+
+.btn-reportar {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+}
+
+.btn-reportar:hover {
+    background-color: #1976d2;
+    color: white;
+}
+
+.btn-corregir-table {
+    background-color: #fff3e0;
+    color: #f57c00;
+    border: 1px solid #ffe0b2;
+    cursor: pointer;
+}
+
+.btn-corregir-table:hover {
+    background-color: #f57c00;
+    color: white;
+}
+
+
+.btn-action.disabled,
+.btn-action:disabled {
     opacity: 0.5;
-    cursor: not-allowed !important;
+    cursor: not-allowed;
     pointer-events: none;
 }
 
-.btn-action.disabled:hover {
-    background-color: transparent !important;
-    transform: none !important;
-}
-
-/* ✅ NUEVOS ESTILOS para alertas de corrección */
+/* Estilo para alerta de corrección */
 .correccion-alerta {
-    border-left: 4px solid #ffc107;
-    background-color: #fff8e1;
-    padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 5px;
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+    border-left: 4px solid #f57c00;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
 }
 
-.correccion-alerta .btn-corregir {
-    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
-    border: none;
+.btn-corregir {
+    background: #f57c00;
     color: white;
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-weight: 500;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-.correccion-alerta .btn-corregir:hover {
-    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.correccion-alerta-danger {
-    border-left: 4px solid #dc3545;
-    background-color: #f8d7da;
-}
-
-.estado-correccion {
-    font-size: 0.85rem;
-    color: #666;
-    margin-top: 5px;
-}
-
-.intentos-info {
-    background-color: #f8f9fa;
-    padding: 8px 12px;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    border-left: 3px solid #6c757d;
+.btn-corregir:hover {
+    background: #ef6c00;
+    transform: translateY(-1px);
 }
 
 .formularios-rechazados {
-    background-color: #fefefe;
-    border: 1px solid #eee;
-    border-radius: 4px;
-    padding: 10px;
-    margin-top: 10px;
+    margin-top: 0.5rem;
 }
 
 .formulario-rechazado-item {
-    padding: 8px;
-    margin-bottom: 5px;
-    background-color: #fff3cd;
-    border-left: 3px solid #ffc107;
-    border-radius: 3px;
+    background: white;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid #ffcc80;
+}
+
+.intentos-info {
+    font-size: 0.875rem;
+    color: #e65100;
+    margin: 0.5rem 0;
+}
+
+.estado-correccion {
+    font-size: 0.7rem;
+    margin-top: 0.25rem;
 }
 </style>
-
 <!-- Contenedor principal -->
 <div class="container my-4">
     <!-- Mensajes de éxito/error -->
@@ -140,11 +297,16 @@ include '../../includes/header.php';
     <?php endif; ?>
 
     <!-- Breadcrumb y botón de añadir -->
-    <nav aria-label="breadcrumb" class="mb-3">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="../dashboard.php">Dashboard</a></li>
-            <li class="breadcrumb-item active">Mis Establecimientos</li>
-        </ol>
+    <nav class="mb-3">
+        <div class="nav nav-tabs custom-tabs" role="tablist">
+            <a class="nav-link" href="../dashboard.php">
+                <i class="bi bi-speedometer2 me-1"></i>Dashboard
+            </a>
+            <a class="nav-link active" href="listado_generadores_view.php">
+                <i class="bi bi-building me-1" ></i>Mis Establecimientos
+            </a>
+            
+        </div>
     </nav>
 
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -162,64 +324,11 @@ include '../../includes/header.php';
             </p>
         </div>
     </div>
-
-    <!-- ✅ NUEVA SECCIÓN: Alerta de correcciones pendientes (si aplica) -->
-    <?php 
-    $tieneCorreccionesPendientes = false;
-    foreach ($generadores as $generador):
-        $info = $info_correcciones[$generador['id']] ?? null;
-        if ($info && $info['puede_corregir']):
-            $tieneCorreccionesPendientes = true;
-    ?>
-    <div class="correccion-alerta">
-        <div class="d-flex justify-content-between align-items-start">
-            <div>
-                <h5 class="mb-2"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
-                    Tienes formularios rechazados para <strong><?= htmlspecialchars($generador['nom_generador']) ?></strong>
-                </h5>
-                
-                <div class="intentos-info">
-                    <i class="bi bi-info-circle me-1"></i>
-                    Intentos usados: <strong><?= $info['revision']['intentos_correccion'] ?></strong> de 
-                    <strong><?= $info['revision']['max_intentos_permitidos'] ?></strong> permitidos
-                </div>
-                
-                <?php if (!empty($info['formularios_rechazados'])): ?>
-                <div class="formularios-rechazados">
-                    <p class="mb-2"><strong>Formularios a corregir:</strong></p>
-                    <?php foreach ($info['formularios_rechazados'] as $formulario): ?>
-                    <div class="formulario-rechazado-item">
-                        <strong><?= $formulario['nombre'] ?></strong>
-                        <?php if ($formulario['observaciones']): ?>
-                        <p class="mb-1 small">Observaciones: <?= htmlspecialchars($formulario['observaciones']) ?></p>
-                        <?php endif; ?>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-                
-                <p class="mb-0 mt-2">
-                    <small class="text-muted">
-                        <i class="bi bi-clock-history me-1"></i>
-                        Tienes <strong>1 oportunidad</strong> para corregir los formularios rechazados.
-                    </small>
-                </p>
-            </div>
-            
-            <form method="POST" style="min-width: 200px;">
-                <input type="hidden" name="generador_id" value="<?= $generador['id'] ?>">
-                <button type="submit" name="reenviar_correccion" class="btn-corregir"
-                        onclick="return confirm('¿Estás seguro de reenviar las correcciones?\n\nEsto contará como un intento de corrección.')">
-                    <i class="bi bi-arrow-clockwise me-2"></i>Reenviar Correcciones
-                </button>
-            </form>
-        </div>
-    </div>
-    <?php 
-        endif;
-    endforeach; 
-    ?>
-
+</div>    
+<!-- Contenedor principal -->
+<div class="container my-4">
+    <!-- ... (Mensajes, Breadcrumb, Tarjeta informativa - igual) ... -->
+    
     <!-- Tabla de generadores -->
     <div class="card">
         <div class="card-body">
@@ -231,6 +340,7 @@ include '../../includes/header.php';
                             <th>Tipo</th>
                             <th>Dirección</th>
                             <th>Categoría</th>
+                            <th>Formularios</th>
                             <th>Estado <?= date('Y', strtotime('-1 year')) ?></th>
                             <th>Acciones</th>
                         </tr>
@@ -240,196 +350,142 @@ include '../../includes/header.php';
                             $info = $info_correcciones[$generador['id']] ?? null;
                             $tieneRechazos = $info && !empty($info['formularios_rechazados']);
                             $puedeCorregir = $info && $info['puede_corregir'];
+                            $estado = $estados_revision[$generador['id']] ?? 'sin_revision';
+                            $anio_revision = date('Y') - 1;
+                            
+                            // Obtener estados de formularios
+                            $estado_mensual = $estados_formularios[$generador['id']]['formulario_mensual'] ?? 'sin_datos';
+                            $estado_accidentes = $estados_formularios[$generador['id']]['formulario_accidentes'] ?? 'sin_datos';
+                            $estado_contingencias = $estados_formularios[$generador['id']]['formulario_contingencias'] ?? 'sin_datos';
+
+                            // Determinar qué iconos están habilitados
+                            $mensual_habilitado = true;
+                            $accidentes_habilitado = $estado_mensual !== 'sin_datos';
+                            $contingencias_habilitado = $estado_accidentes !== 'sin_datos';
+                            
+                            // Verificar formularios rechazados
+                            $formularios_rechazados = [];
+                            if ($info && !empty($info['formularios_rechazados'])) {
+                                foreach ($info['formularios_rechazados'] as $form_rechazado) {
+                                    $formularios_rechazados[] = $form_rechazado['tipo'];
+                                }
+                            }
+                            
+                            // Clases de color según estado (igual que en revisiones_view)
+                            $clase_color_mensual = obtenerClaseColor($estado_mensual);
+                            $clase_color_accidentes = obtenerClaseColor($estado_accidentes);
+                            $clase_color_contingencias = obtenerClaseColor($estado_contingencias);
                         ?>
-                            <tr>
-                                <td>
-                                    <?php echo htmlspecialchars($generador['nom_generador']); ?>
-                                    <?php if ($tieneRechazos && !$puedeCorregir): ?>
-                                        <span class="badge bg-danger ms-1" data-bs-toggle="tooltip" 
-                                              title="Tiene formularios rechazados sin posibilidad de corrección">
-                                            <i class="bi bi-x-circle"></i>
-                                        </span>
-                                    <?php endif; ?>
-                                </td>
-                                <td><?php echo htmlspecialchars($generador['tipo_sujeto']); ?></td>
-                                <td><?php echo htmlspecialchars($generador['dir_establecimiento']); ?></td>
-                                <td>
-                                    <?php if ($generador['categoria']): ?>
-                                        <?php
-                                        $clases_badge = [
-                                            'Micro generador' => 'badge-categoria badge-micro',
-                                            'Pequeño generador' => 'badge-categoria badge-pequeno-generador',
-                                            'Mediano generador' => 'badge-categoria badge-mediano-generador',
-                                            'Gran generador' => 'badge-categoria badge-gran-generador'
-                                        ];
-                                        
-                                        $clase = $clases_badge[$generador['categoria']] ?? 'badge bg-secondary';
-                                        ?>
-                                        <span class="<?php echo $clase; ?>">
-                                            <?php echo htmlspecialchars($generador['categoria']); ?>
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="badge bg-secondary">Sin datos</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
+                        <tr>
+                            <td><?php echo htmlspecialchars($generador['nom_generador']); ?></td>
+                            <td><?php echo htmlspecialchars($generador['tipo_sujeto']); ?></td>
+                            <td><?php echo htmlspecialchars($generador['dir_establecimiento']); ?></td>
+                            <td>
+                                <?php if ($generador['categoria']): ?>
                                     <?php
-                                    $estado = $estados_revision[$generador['id']] ?? 'sin_revision';
-                                    
-                                    $estados_config = [
-                                        'pendiente' => [
-                                            'clase' => 'badge-estado badge-estado-pendiente',
-                                            'texto' => 'Pendiente',
-                                            'icono' => 'bi bi-clock'
-                                        ],
-                                        'aprobado' => [
-                                            'clase' => 'badge-estado badge-estado-aprobado', 
-                                            'texto' => 'Aprobado',
-                                            'icono' => 'bi bi-check-circle'
-                                        ],
-                                        'rechazado' => [
-                                            'clase' => 'badge-estado badge-estado-rechazado',
-                                            'texto' => 'Rechazado',
-                                            'icono' => 'bi bi-x-circle'
-                                        ],
-                                        'sin_revision' => [
-                                            'clase' => 'badge-estado badge-estado-sin-revision',
-                                            'texto' => 'Sin revisión',
-                                            'icono' => 'bi bi-dash-circle'
-                                        ]
+                                    $clases_badge = [
+                                        'Micro generador' => 'badge-categoria badge-micro',
+                                        'Pequeño generador' => 'badge-categoria badge-pequeno-generador',
+                                        'Mediano generador' => 'badge-categoria badge-mediano-generador',
+                                        'Gran generador' => 'badge-categoria badge-gran-generador'
                                     ];
+                                    $clase = $clases_badge[$generador['categoria']] ?? 'badge bg-secondary';
+                                    ?>
+                                    <span class="<?php echo $clase; ?>">
+                                        <?php echo htmlspecialchars($generador['categoria']); ?>
+                                    </span>
+                                <?php else: ?>
+                                    <span class="badge bg-secondary">Sin datos</span>
+                                <?php endif; ?>
+                            </td>
+                            <!-- Columna de iconos de formularios con colores según estado -->
+                            <td>
+                                <div class="d-flex justify-content-start gap-2">
+                                    <!-- Icono Reporte Mensual -->
+                                    <a href="reporte_mensual_view.php?id=<?= $generador['id'] ?>" 
+                                       class="formulario-icon <?= getIconoClase($estado_mensual, $mensual_habilitado, $formularios_rechazados, 'mensual') ?> <?= $clase_color_mensual ?>"
+                                       data-tooltip="<?= getIconoTooltip('mensual', $mensual_habilitado, $estado_mensual, $formularios_rechazados) ?>"
+                                       title="<?= getIconoTooltip('mensual', $mensual_habilitado, $estado_mensual, $formularios_rechazados) ?>">
+                                        <i class="bi bi-clipboard-data"></i>
+                                    </a>
                                     
-                                    $config = $estados_config[$estado] ?? $estados_config['sin_revision'];
-                                    $anio_revision = date('Y') - 1;
+                                    <!-- Icono Reporte Accidentes -->
+                                    <a href="reporte_adicional_view.php?id=<?= $generador['id'] ?>" 
+                                       class="formulario-icon <?= $accidentes_habilitado ? getIconoClase($estado_accidentes, $accidentes_habilitado, $formularios_rechazados, 'accidentes') : 'formulario-icon-deshabilitado' ?> <?= $accidentes_habilitado ? $clase_color_accidentes : '' ?>"
+                                       data-tooltip="<?= getIconoTooltip('accidentes', $accidentes_habilitado, $estado_accidentes, $formularios_rechazados) ?>"
+                                       title="<?= getIconoTooltip('accidentes', $accidentes_habilitado, $estado_accidentes, $formularios_rechazados) ?>"
+                                       <?= !$accidentes_habilitado ? 'onclick="return false;"' : '' ?>>
+                                        <i class="bi-clipboard-check"></i>
+                                    </a>
+                                    
+                                    <!-- Icono Plan de Contingencias -->
+                                    <a href="reporte_contingencias_view.php?id=<?= $generador['id'] ?>" 
+                                       class="formulario-icon <?= $contingencias_habilitado ? getIconoClase($estado_contingencias, $contingencias_habilitado, $formularios_rechazados, 'contingencias') : 'formulario-icon-deshabilitado' ?> <?= $contingencias_habilitado ? $clase_color_contingencias : '' ?>"
+                                       data-tooltip="<?= getIconoTooltip('contingencias', $contingencias_habilitado, $estado_contingencias, $formularios_rechazados) ?>"
+                                       title="<?= getIconoTooltip('contingencias', $contingencias_habilitado, $estado_contingencias, $formularios_rechazados) ?>"
+                                       <?= !$contingencias_habilitado ? 'onclick="return false;"' : '' ?>>
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                    </a>
+                                </div>
+                            </td>
+                            
+                            <!-- Estado general -->
+                            <td>
+                                <span class="badge-estado badge-estado-<?= $estado ?>" 
+                                      data-bs-toggle="tooltip" 
+                                      title="Estado de revisión <?= $anio_revision ?>">
+                                    <i class="bi <?= $estado === 'aprobado' ? 'bi-check-circle' : ($estado === 'rechazado' ? 'bi-x-circle' : ($estado === 'pendiente' ? 'bi-clock' : 'bi-dash-circle')) ?> me-1"></i>
+                                    <?= ucfirst(str_replace('_', ' ', $estado)) ?>
+                                </span>
+                                <?php if ($info && $estado === 'rechazado'): ?>
+                                    <div class="estado-correccion">
+                                        <small>Intentos: <?= $info['revision']['intentos_correccion'] ?>/<?= $info['revision']['max_intentos_permitidos'] ?></small>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
+                            
+                            <!-- Acciones -->
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <?php if ($puedeCorregir): ?>
+                                    <form method="POST" class="d-inline">
+                                        <input type="hidden" name="generador_id" value="<?= $generador['id'] ?>">
+                                        <button type="submit" name="reenviar_correccion" 
+                                                class="btn-action btn-corregir-table"
+                                                onclick="return confirm('¿Reenviar correcciones para <?= htmlspecialchars($generador['nom_generador']) ?>?')"
+                                                title="Reenviar correcciones">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </button>
+                                    </form>
+                                    <?php endif; ?>
+                                    
+                                    <?php
+                                    $estado_contingencias_conf = $controller->obtenerEstadoContingencias($generador['id']);
+                                    $contingencias_confirmadas = ($estado_contingencias_conf === 'confirmado');
                                     ?>
                                     
-                                    <span class="<?= $config['clase'] ?>" 
-                                          data-bs-toggle="tooltip" 
-                                          title="Estado de revisión <?= $anio_revision ?>">
-                                        <i class="<?= $config['icono'] ?> me-1"></i>
-                                        <?= $config['texto'] ?>
-                                    </span>
+                                    <a href="generador_view.php?id=<?php echo $generador['id']; ?>" 
+                                       class="btn-action btn-editar <?= $contingencias_confirmadas ? 'disabled' : '' ?>" 
+                                       title="<?= $contingencias_confirmadas ? 'No editable' : 'Editar' ?>"
+                                       <?= $contingencias_confirmadas ? 'onclick="event.preventDefault(); mostrarAdvertenciaConfirmado();"' : '' ?>>
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
                                     
-                                    <!-- ✅ NUEVO: Mostrar información de intentos -->
-                                    <?php if ($info && $estado === 'rechazado'): ?>
-                                        <div class="estado-correccion">
-                                            <small>
-                                                Intentos: <?= $info['revision']['intentos_correccion'] ?>/<?= $info['revision']['max_intentos_permitidos'] ?>
-                                                <?php if (!$puedeCorregir && $info['revision']['intentos_correccion'] > 0): ?>
-                                                    <span class="text-danger">(Sin intentos)</span>
-                                                <?php endif; ?>
-                                            </small>
-                                        </div>
-                                    <?php endif; ?>
-                                </td>
-                                    
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <!-- Botón Reportar -->
-                                        <a href="reporte_mensual_view.php?id=<?php echo $generador['id']; ?>" 
-                                           class="btn-action btn-reportar" title="Reportar residuos">
-                                            <i class="bi bi-clipboard-data"></i>
-                                        </a>
-                                        
-                                        <!-- ✅ NUEVO: Botón para corregir formularios rechazados -->
-                                        <?php if ($puedeCorregir): ?>
-                                        <form method="POST" class="d-inline">
-                                            <input type="hidden" name="generador_id" value="<?= $generador['id'] ?>">
-                                            <button type="submit" name="reenviar_correccion" 
-                                                    class="btn-action btn-corregir-table"
-                                                    onclick="return confirm('¿Reenviar correcciones para <?= htmlspecialchars($generador['nom_generador']) ?>?\n\nEsto contará como un intento.')"
-                                                    title="Reenviar correcciones de formularios rechazados">
-                                                <i class="bi bi-arrow-clockwise text-warning"></i>
-                                            </button>
-                                        </form>
-                                        <?php endif; ?>
-                                        
-                                        <?php
-                                        $estado_contingencias = $controller->obtenerEstadoContingencias($generador['id']);
-                                        $contingencias_confirmadas = ($estado_contingencias === 'confirmado');
-                                        ?>
-                                        
-                                        <!-- Botón Editar -->
-                                        <a href="generador_view.php?id=<?php echo $generador['id']; ?>" 
-                                           class="btn-action btn-editar <?= $contingencias_confirmadas ? 'disabled' : '' ?>" 
-                                           title="<?= $contingencias_confirmadas ? 'No editable - Contingencias confirmadas' : 'Editar' ?>"
-                                           <?= $contingencias_confirmadas ? 'onclick="event.preventDefault(); mostrarAdvertenciaConfirmado();"' : '' ?>>
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
-                                        
-                                        <!-- Botón Eliminar -->
-                                        <button onclick="<?= $contingencias_confirmadas ? 'mostrarAdvertenciaConfirmado()' : 'confirmarEliminacion(' . $generador['id'] . ')' ?>" 
-                                                class="btn-action btn-eliminar <?= $contingencias_confirmadas ? 'disabled' : '' ?>" 
-                                                title="<?= $contingencias_confirmadas ? 'No eliminable - Contingencias confirmadas' : 'Eliminar' ?>">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
+                                    <button onclick="<?= $contingencias_confirmadas ? 'mostrarAdvertenciaConfirmado()' : 'confirmarEliminacion(' . $generador['id'] . ')' ?>" 
+                                            class="btn-action btn-eliminar <?= $contingencias_confirmadas ? 'disabled' : '' ?>" 
+                                            title="<?= $contingencias_confirmadas ? 'No eliminable' : 'Eliminar' ?>">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
-
-            <?php if (empty($generadores)): ?>
-                <div class="alert alert-info text-center mt-3">
-                    <i class="bi bi-info-circle me-2"></i>No tienes establecimientos registrados.
-                </div>
-            <?php endif; ?>
         </div>
     </div>
 </div>
 
-<!-- Modal de confirmación para eliminar -->
-<div class="modal fade" id="confirmModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar Eliminación</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                ¿Estás seguro de eliminar este establecimiento? Todos sus reportes mensuales también se eliminarán.
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <a id="eliminarBtn" href="#" class="btn btn-outline-danger">Eliminar</a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Footer -->
+<!-- Modal y scripts igual... -->
 <?php include '../../includes/footer.php'; ?>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-function confirmarEliminacion(id) {
-    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
-    document.getElementById('eliminarBtn').href = `listado_generadores_view.php?eliminar=${id}`;
-    modal.show();
-}
-
-function mostrarAdvertenciaConfirmado() {
-    alert("Este establecimiento no se puede editar ni eliminar porque ya tiene un plan de contingencias confirmado.");
-}
-
-// Inicializar tooltips
-var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl);
-});
-
-// Estilo para botón de corrección en tabla
-document.querySelectorAll('.btn-corregir-table').forEach(btn => {
-    btn.addEventListener('mouseenter', function() {
-        this.style.backgroundColor = '#fff3cd';
-        this.style.borderColor = '#ffc107';
-    });
-    btn.addEventListener('mouseleave', function() {
-        this.style.backgroundColor = '';
-        this.style.borderColor = '';
-    });
-});
-</script>

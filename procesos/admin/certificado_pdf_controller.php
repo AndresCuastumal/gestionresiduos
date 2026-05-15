@@ -1,11 +1,7 @@
 <?php
-require_once __DIR__ . '/../../includes/conexion.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
 
-// Incluir DomPDF via Composer
-require_once __DIR__ . '/../../vendor/autoload.php'; // Ruta corregida
-
-use Dompdf\Dompdf;
-use Dompdf\Options;
+use Mpdf\Mpdf;
 
 class CertificadoPdfController {
     private $conn;
@@ -14,82 +10,63 @@ class CertificadoPdfController {
         $this->conn = $conn;
     }
     
-    // Generar certificado PDF real para generador aprobado
     public function generarCertificadoAprobacion($generador_id, $anio) {
-        error_log("Generando certificado PDF real para generador_id: $generador_id, año: $anio");
+        error_log("Generando certificado con mPDF para generador_id: $generador_id, año: $anio");
         
         try {
             // Obtener datos del generador
             $stmt = $this->conn->prepare("
                 SELECT 
                     g.id, g.nom_generador, g.nit, g.dir_establecimiento, g.nom_responsable,
-                    ts.nom_clase as nom_tipo, 
-                    r.fecha_revision
+                    ts.nom_clase as nom_tipo
                 FROM generador g
                 JOIN subcategoria ts ON g.tipo_sujeto = ts.id
-                JOIN revisiones_anuales r ON g.id = r.generador_id
-                WHERE g.id = ? AND r.anio = ?
+                WHERE g.id = ?
             ");
-            $stmt->execute([$generador_id, $anio]);
+            $stmt->execute([$generador_id]);
             $generador = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$generador) {
                 throw new Exception("No se encontraron datos del generador");
             }
             
-            // Configurar DomPDF
-            $options = new Options();
-            $options->set('isHtml5ParserEnabled', true);
-            $options->set('isRemoteEnabled', true);
-            $options->set('defaultFont', 'helvetica');
-            $options->set('isPhpEnabled', true);
-            $options->set('isFontSubsettingEnabled', true); // IMPORTANTE: Reduce tamaño de fuentes
-            $options->set('dpi', 96); // Reducir DPI para menos detalle pero más compacto
-            $dompdf = new Dompdf($options);
+            // Configurar mPDF
+            $mpdf = new Mpdf([
+                'mode' => 'utf-8',
+                'format' => 'A4',
+                'orientation' => 'P',
+                'margin_top' => 20,
+                'margin_bottom' => 20,
+                'margin_left' => 15,
+                'margin_right' => 15,
+                'default_font_size' => 11,
+                'default_font' => 'helvetica'
+            ]);
             
-            // Crear contenido HTML para el PDF
+            // Generar HTML
             $html = $this->generarHtmlCertificado($generador, $anio);
             
-            // Cargar HTML en DomPDF
-            $dompdf->loadHtml($html, 'UTF-8');
-            
-            // Configurar papel y orientación
-            $dompdf->setPaper('A4', 'portrait');
-            
-            // Renderizar PDF
-            $dompdf->render();
+            // Escribir HTML
+            $mpdf->WriteHTML($html);
             
             // Crear directorio si no existe
             $directorio = __DIR__ . "/certificados/";
             if (!is_dir($directorio)) {
                 mkdir($directorio, 0755, true);
-                error_log("Directorio creado: $directorio");
-            }
-            
-            // Verificar permisos de escritura
-            if (!is_writable($directorio)) {
-                throw new Exception("El directorio $directorio no tiene permisos de escritura");
             }
             
             // Nombre del archivo
             $nombre_archivo = "certificado_aprobacion_{$generador_id}_{$anio}.pdf";
             $ruta_archivo = $directorio . $nombre_archivo;
             
-            // Guardar PDF en archivo
-            $output = $dompdf->output();
-            $resultado = file_put_contents($ruta_archivo, $output);
+            // Guardar archivo
+            $mpdf->Output($ruta_archivo, 'F');
             
-            if ($resultado === false) {
-                throw new Exception("Error al guardar el archivo PDF");
-            }
-            
-            // Verificar que el archivo se creó
             if (!file_exists($ruta_archivo)) {
-                throw new Exception("El archivo PDF no se creó: $ruta_archivo");
+                throw new Exception("No se pudo guardar el archivo PDF");
             }
             
-            $tamano = filesize($ruta_archivo);
-            error_log("✅ Certificado PDF generado exitosamente: $ruta_archivo ($tamano bytes)");
+            error_log("✅ Certificado PDF generado exitosamente: $ruta_archivo");
             
             return [
                 'nombre_archivo' => $nombre_archivo,
@@ -97,31 +74,27 @@ class CertificadoPdfController {
             ];
             
         } catch (Exception $e) {
-            error_log("❌ Error en generación de PDF: " . $e->getMessage());
-            throw $e; // Relanzar la excepción
+            error_log("❌ Error generando certificado con mPDF: " . $e->getMessage());
+            
+            // Fallback: crear archivo HTML
+            return $this->crearCertificadoHTML($generador_id, $anio);
         }
     }
     
-        private function generarHtmlCertificado($generador, $anio) {
+    private function generarHtmlCertificado($generador, $anio) {
         $fecha_actual = date('d/m/Y');
-        $fecha_revision = $generador['fecha_revision'] ? date('d/m/Y', strtotime($generador['fecha_revision'])) : $fecha_actual;
-        
-        // Escapar todos los datos para seguridad
         $nom_generador = htmlspecialchars($generador['nom_generador'] ?? '');
         $nit = htmlspecialchars($generador['nit'] ?? '');
         $direccion = htmlspecialchars($generador['dir_establecimiento'] ?? '');
         $tipo_sujeto = htmlspecialchars($generador['nom_tipo'] ?? '');
         $responsable = htmlspecialchars($generador['nom_responsable'] ?? '');
         
-        // Obtener la imagen en base64
+        // Logo en base64 si existe
         $logoPath = $_SERVER['DOCUMENT_ROOT'] . '/gestionresiduos/assets/css/logoNuevoSMS2024.png';
-        
+        $logoBase64 = '';
         if (file_exists($logoPath)) {
             $logoData = base64_encode(file_get_contents($logoPath));
             $logoBase64 = 'data:image/png;base64,' . $logoData;
-        } else {
-            $logoBase64 = '';
-            error_log("⚠️ Advertencia: No se encontró la imagen en: $logoPath");
         }
         
         return "
@@ -131,178 +104,188 @@ class CertificadoPdfController {
             <meta charset='UTF-8'>
             <title>Certificado de Aprobación</title>
             <style>
-                @page {
-                    margin: 20mm 15mm;
-                }
-                body { 
-                    font-family: 'DejaVu Sans', Arial, sans-serif; 
+                body {
+                    font-family: helvetica, arial, sans-serif;
                     margin: 0;
                     padding: 0;
-                    color: #333;
-                    line-height: 1.3;
-                    font-size: 11px;
-                }
-                .certificado {                    
-                    padding: 10px 15px;
-                    width: 100%;
-                    box-sizing: border-box;
                 }
                 .header {
-                    margin-bottom: 15px;
                     text-align: center;
+                    margin-bottom: 30px;
                 }
-                .logo-container {
-                    margin-bottom: 10px;
+                .logo {
+                    max-height: 80px;
+                    margin-bottom: 20px;
                 }
-                .logo-img {
-                    max-height: 70px;
-                    width: auto;
-                    display: block;
-                    margin: 0 auto;
+                h1 {
+                    color: #af4c4c;
+                    font-size: 18pt;
+                    margin: 10px 0;
                 }
-                .header h1 {
-                    color: #af4c4cff;
-                    font-size: 16px;
-                    margin: 8px 0;
-                    text-transform: uppercase;
-                    line-height: 1.2;
-                }
-                .header h2 {
-                    color: #666;
-                    font-size: 12px;
-                    font-weight: normal;
-                    margin: 5px 0;
-                    line-height: 1.2;
-                }
-                .texto-centrado {
-                    text-align: center;
-                    margin: 12px 0;
-                    font-size: 11px;
-                }
-                .datos-generador {
-                    background-color: #f9f9f9;
-                    padding: 12px;
-                    margin: 12px 0;
-                    border-left: 3px solid #af784cff;
-                    border-radius: 4px;
-                    font-size: 10.5px;
-                }
-                .datos-generador p {
+                h2 {
+                    font-size: 14pt;
                     margin: 5px 0;
                 }
-                .content {
-                    margin: 15px 0;
-                    text-align: justify;
-                    font-size: 11px;
+                h3 {
+                    font-size: 12pt;
+                    margin: 5px 0;
                 }
-                .content p {
-                    margin: 8px 0;
+                .datos {
+                    background: #f9f9f9;
+                    padding: 15px;
+                    margin: 20px 0;
+                    border-left: 4px solid #af784c;
                 }
-                .footer {
-                    margin-top: 20px;
-                    padding-top: 15px;
-                    border-top: 1px solid #ddd;
-                    font-size: 10px;
+                .firma {
+                    margin-top: 50px;
                     text-align: center;
-                }
-                .firma-area {
-                    margin-top: 25px;
-                    text-align: center;
-                    font-size: 10px;
-                }
-                .linea-firma {
-                    width: 250px;
-                    border-top: 1px solid #000;
-                    margin: 40px auto 5px auto;
-                    display: block;
                 }
                 .sello {
-                    color: #0b8f07ff;
-                    font-weight: bold;
-                    font-size: 10px;
-                    margin-top: 15px;
-                    border: 1px solid #0b8f07ff;
+                    border: 2px solid #0b8f07;
+                    padding: 8px 30px;
                     display: inline-block;
-                    padding: 8px 15px;
-                    border-radius: 3px;
-                    background-color: #baf3d6ff;
+                    margin-top: 20px;
+                    font-weight: bold;
                 }
-                .compacto {
-                    margin: 5px 0;
-                    padding: 0;
-                }
-                .texto-pequeno {
-                    font-size: 10px;
-                    margin: 4px 0;
-                }
-                .fecha-generacion {
-                    text-align: right;
-                    font-size: 9px;
+                .footer {
+                    margin-top: 40px;
+                    text-align: center;
+                    font-size: 9pt;
                     color: #666;
-                    margin-bottom: 10px;
+                }
+                .fecha {
+                    text-align: right;
+                    font-size: 9pt;
+                    margin-bottom: 20px;
+                }
+                table {
+                    width: 100%;
+                }
+                td {
+                    padding: 5px;
                 }
             </style>
         </head>
         <body>
-            <div class='fecha-generacion'>
+            <div class='fecha'>
                 Generado: $fecha_actual
             </div>
             
-            <div class='certificado'>
-                <div class='header'>
-                    <div class='logo-container'>
-                        <img src='$logoBase64' alt='Logo SMS' class='logo-img'>
-                    </div>
-                    <br><br><br><br>
-                    <h2><b>REPORTE DE GESTIÓN INTEGRAL DE RESIDUOS GENERADOS EN ATENCIÓN EN SALUD Y OTRAS ACTIVIDADES</b></h2>
-                    <br><br><br>
-                    <h1>Certificado de Aprobación - Año $anio</h1>
+            <div class='header'>
+                " . ($logoBase64 ? "<img src='$logoBase64' class='logo'>" : "") . "
+                <h2>SECRETARÍA MUNICIPAL DE SALUD DE PASTO</h2>
+                <h3>Oficina de Salud Ambiental</h3>
+                <h1>Certificado de Aprobación</h1>
+                <h3>Año $anio</h3>
+            </div>
+            
+            <p>La Secretaría Municipal de Salud de Pasto certifica que:</p>
+            
+            <div class='datos'>
+                <table>
+                    <tr>
+                        <td width='30%'><strong>Nombre del Generador:</strong></td>
+                        <td>$nom_generador</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NIT/Identificación:</strong></td>
+                        <td>$nit</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Dirección del Establecimiento:</strong></td>
+                        <td>$direccion</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tipo de Sujeto Obligado:</strong></td>
+                        <td>$tipo_sujeto</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Responsable del Reporte:</strong></td>
+                        <td>$responsable</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <p>Ha cumplido satisfactoriamente con la presentación y aprobación del Reporte Anual 
+            de Gestión Integral de Residuos Generados en Atención en Salud y Otras Actividades 
+            correspondiente al año <strong>$anio</strong>, de acuerdo con lo establecido en la 
+            normativa ambiental vigente.</p>
+            
+            <div class='firma'>
+                <div class='sello'>
+                    APROBADO
                 </div>
-                
-                <div class='texto-centrado'>
-                    <p>La Secretaría Municipal de Salud de Pasto - Oficina de Salud Ambiental certifica que:</p>
-                </div>
-                
-                <div class='datos-generador'>
-                    <p><strong>Nombre del Generador:</strong> $nom_generador</p>
-                    <p><strong>NIT/Identificación:</strong> $nit</p>
-                    <p><strong>Dirección del Establecimiento:</strong> $direccion</p>
-                    <p><strong>Tipo de Sujeto Obligado:</strong> $tipo_sujeto</p>
-                    <p><strong>Responsable del Reporte:</strong> $responsable</p>
-                </div>
-                
-                <div class='content'>
-                    <p>Ha cumplido satisfactoriamente con la presentación y aprobación del Reporte Anual de Gestión integral de Residuos generados en atención en salud y otras actividades correspondiente al año <strong>$anio</strong>, de acuerdo con lo establecido en la normativa ambiental vigente.</p>
-                    
-                    <p>El presente certificado acredita que todos los formularios requeridos han sido revisados y aprobados por el administrador del sistema.</p>
-                </div>
-                <br><br><br><br>
-                <div class='firma-area'>       
-                    <div class='sello'>
-                        APROBADO
-                    </div>
-                    
-                    <p class='texto-pequeno'>Sistema de Gestión Integral de Residuos Generados en Atención en Salud y Otras Activiades</p>
-                    <p class='texto-pequeno'><em>Certificado generado automáticamente - Válido por un año</em></p>
-                </div>
-                
-                <div class='footer'>                    
-                    <p class='texto-pequeno'>Secretaría Municipal de Salud de Pasto - Oficina de Salud Ambiental</p>
-                    <p class='texto-pequeno'>CAM ANGANOY - Barrio Los Rosales II, Pasto, Nariño - Tel: (602) 7244326 Ext. 8009</p>
-                </div>              
+                <p><small>Certificado generado automáticamente - Válido por un año</small></p>
+            </div>
+            
+            <div class='footer'>
+                <p>Secretaría Municipal de Salud de Pasto - Oficina de Salud Ambiental</p>
+                <p>CAM ANGANOY - Barrio Los Rosales II, Pasto, Nariño - Tel: (602) 7244326 Ext. 8009</p>
             </div>
         </body>
         </html>
         ";
     }
     
-    // Obtener ruta del certificado si existe
+    private function crearCertificadoHTML($generador_id, $anio) {
+        $directorio = __DIR__ . "/certificados/";
+        if (!is_dir($directorio)) {
+            mkdir($directorio, 0755, true);
+        }
+        
+        $nombre_archivo = "certificado_{$generador_id}_{$anio}.html";
+        $ruta_archivo = $directorio . $nombre_archivo;
+        
+        // Obtener datos
+        $stmt = $this->conn->prepare("
+            SELECT g.nom_generador, g.nit, g.nom_responsable 
+            FROM generador g 
+            WHERE g.id = ?
+        ");
+        $stmt->execute([$generador_id]);
+        $generador = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        $html = "<!DOCTYPE html>";
+        $html .= "<html><head><meta charset='UTF-8'><title>Certificado</title>";
+        $html .= "<style>body{font-family:Arial;margin:40px;text-align:center;} ";
+        $html .= ".certificado{border:2px solid #af4c4c;padding:30px;border-radius:10px;} ";
+        $html .= "h1{color:#af4c4c;} .sello{color:green;font-weight:bold;margin-top:30px;}</style>";
+        $html .= "</head><body>";
+        $html .= "<div class='certificado'>";
+        $html .= "<h1>CERTIFICADO DE APROBACIÓN</h1>";
+        $html .= "<h3>Año $anio</h3>";
+        $html .= "<hr>";
+        $html .= "<p><strong>Generador:</strong> " . htmlspecialchars($generador['nom_generador']) . "</p>";
+        $html .= "<p><strong>NIT:</strong> " . htmlspecialchars($generador['nit']) . "</p>";
+        $html .= "<p><strong>Responsable:</strong> " . htmlspecialchars($generador['nom_responsable']) . "</p>";
+        $html .= "<hr>";
+        $html .= "<p>Este certificado acredita que el generador ha cumplido con la presentación del reporte anual.</p>";
+        $html .= "<div class='sello'>APROBADO</div>";
+        $html .= "<p><small>Fecha: " . date('d/m/Y') . "</small></p>";
+        $html .= "</div>";
+        $html .= "</body></html>";
+        
+        file_put_contents($ruta_archivo, $html);
+        
+        return [
+            'nombre_archivo' => $nombre_archivo,
+            'ruta_completa' => $ruta_archivo
+        ];
+    }
+    
     public function obtenerRutaCertificado($generador_id, $anio) {
         $directorio = __DIR__ . "/certificados/";
         $nombre_archivo = "certificado_aprobacion_{$generador_id}_{$anio}.pdf";
-        $ruta = $directorio . $nombre_archivo;
+        $ruta_pdf = $directorio . $nombre_archivo;
         
-        return file_exists($ruta) ? $ruta : null;
+        if (file_exists($ruta_pdf)) {
+            return $ruta_pdf;
+        }
+        
+        // Buscar HTML alternativo
+        $nombre_html = "certificado_{$generador_id}_{$anio}.html";
+        $ruta_html = $directorio . $nombre_html;
+        
+        return file_exists($ruta_html) ? $ruta_html : null;
     }
 }
-?>

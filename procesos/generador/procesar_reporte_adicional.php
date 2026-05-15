@@ -142,23 +142,42 @@ try {
         'archivo_soportes_capacitaciones'
     );
     
-    $archivo_resultados_auditorias = procesarArchivo(
-        $_FILES['archivo_resultados_auditorias'], 
+    $archivo_resultados_auditorias_internas = procesarArchivo(
+        $_FILES['archivo_resultados_auditorias_internas'], 
         $directorio, 
-        'resultados_auditorias_', 
+        'resultados_auditorias_internas_', 
         $generador_id, 
         $anio, 
-        'archivo_resultados_auditorias'
+        'archivo_resultados_auditorias_internas'
+    );
+
+    $archivo_resultados_auditorias_externas = procesarArchivo(
+        $_FILES['archivo_resultados_auditorias_externas'], 
+        $directorio, 
+        'resultados_auditorias_externas_', 
+        $generador_id, 
+        $anio, 
+        'archivo_resultados_auditorias_externas'
     );
     
-    $archivo_plan_mejoramiento = procesarArchivo(
-        $_FILES['archivo_plan_mejoramiento'], 
+    $archivo_plan_mejoramiento_interno = procesarArchivo(
+        $_FILES['archivo_plan_mejoramiento_interno'], 
         $directorio, 
-        'plan_mejoramiento_', 
+        'plan_mejoramiento_interno_', 
         $generador_id, 
         $anio, 
-        'archivo_plan_mejoramiento'
+        'archivo_plan_mejoramiento_interno'
     );
+    $archivo_plan_mejoramiento_externas = procesarArchivo(
+        $_FILES['archivo_plan_mejoramiento_externas'], 
+        $directorio, 
+        'plan_mejoramiento_externas_', 
+        $generador_id, 
+        $anio, 
+        'archivo_plan_mejoramiento_externas'
+    );
+
+    
     
     // ✅ Resto del código (se mantiene igual)...
     $acciones_preventivas = isset($_POST['acciones_preventivas']) ? $_POST['acciones_preventivas'] : [];
@@ -200,9 +219,12 @@ try {
                 num_accidentes = ?,
                 acciones_preventivas = ?,
                 otra_accion_preventiva = ?,
-                num_auditorias = ?,
-                archivo_resultados_auditorias = ?,
-                archivo_plan_mejoramiento = ?,
+                num_auditorias_internas = ?,
+                archivo_resultados_auditorias_internas = ?,
+                archivo_plan_mejoramiento_interno = ?,
+                num_auditorias_externas = ?,
+                archivo_resultados_auditorias_externas = ?,
+                archivo_plan_mejoramiento_externas = ?,
                 fecha_creacion = CURRENT_TIMESTAMP
                 WHERE generador_id = ? AND anio = ?");
             
@@ -216,9 +238,12 @@ try {
                 $num_accidentes,
                 $acciones_json,
                 $otra_accion_preventiva,
-                $_POST['num_auditorias'],
-                $archivo_resultados_auditorias,
-                $archivo_plan_mejoramiento,
+                $_POST['num_auditorias_internas'],
+                $archivo_resultados_auditorias_internas,
+                $archivo_plan_mejoramiento_interno,
+                $_POST['num_auditorias_externas'],
+                $archivo_resultados_auditorias_externas,
+                $archivo_plan_mejoramiento_externas,
                 $generador_id,
                 $anio
             ]);
@@ -234,8 +259,9 @@ try {
                 (generador_id, anio, num_capacitaciones_programadas, archivo_cronograma,
                  num_capacitaciones_ejecutadas, num_empleados_capacitados, archivo_soportes_capacitaciones,
                  tiene_accidentes, num_accidentes, acciones_preventivas, otra_accion_preventiva,
-                 num_auditorias, archivo_resultados_auditorias, archivo_plan_mejoramiento)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                 num_auditorias_internas, archivo_resultados_auditorias_internas, archivo_plan_mejoramiento_interno,
+                 num_auditorias_externas, archivo_resultados_auditorias_externas, archivo_plan_mejoramiento_externas)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             
             $stmt->execute([
                 $generador_id, $anio,
@@ -248,9 +274,12 @@ try {
                 $num_accidentes,
                 $acciones_json,
                 $otra_accion_preventiva,
-                $_POST['num_auditorias'],
-                $archivo_resultados_auditorias,
-                $archivo_plan_mejoramiento
+                $_POST['num_auditorias_internas'],
+                $archivo_resultados_auditorias_internas,
+                $archivo_plan_mejoramiento_interno,
+                $_POST['num_auditorias_externas'],
+                $archivo_resultados_auditorias_externas,
+                $archivo_plan_mejoramiento_externas
             ]);
             
             $_SESSION['mensaje_exito'] = "¡Información adicional guardada! Complete ahora el plan de contingencias.";

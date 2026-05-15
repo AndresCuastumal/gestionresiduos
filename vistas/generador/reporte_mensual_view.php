@@ -138,6 +138,7 @@ if ($estado_formulario_mensual === 'rechazado' && !$permiteCorreccion): ?>
 <?php
 // Mensaje si el reporte ya fue enviado (mantener existente)
 if(isset($contingencia) && is_array($contingencia) && isset($contingencia['estado']) && $contingencia['estado']=='confirmado' && !$puede_editar): ?>
+    
     <div class="alert alert-warning text-center mb-0">
         <i class="bi bi-exclamation-triangle me-2"></i>
         <strong>El reporte anual para el año <?= $anio_actual ?> ya fue enviado y está en proceso de revisión.</strong>
@@ -148,28 +149,50 @@ if(isset($contingencia) && is_array($contingencia) && isset($contingencia['estad
     <!-- Contenedor principal -->
     <div class="container my-4">
         <!-- Breadcrumb -->
-        <nav aria-label="breadcrumb" class="mb-3">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="../dashboard.php">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="listado_generadores_view.php">Mis Establecimientos</a></li>
-                
-                <?php if ($menu_navegacion_activo || $reporte_bloqueado): ?>
-                    <!-- Menú completo activo cuando los tres formularios están llenos -->
-                    <li class="breadcrumb-item active"><b><u>Reporte Mensual de residuos</u></b></li>
-                    <li class="breadcrumb-item"><a href="reporte_adicional_view.php?id=<?= $generador_id ?>">Capacitaciones, accidentes y auditorías</a></li>
-                    <li class="breadcrumb-item"><a href="reporte_contingencias_view.php?id=<?= $generador_id ?>">Plan de Contingencias</a></li>
+        <nav class="mb-3">
+            <div class="nav nav-tabs custom-tabs" role="tablist">                
+                <a class="nav-link active" href="#">
+                    <i class="bi bi-clipboard-data me-1"></i>Reporte Mensual de Residuos
+                </a>                
+                <?php if ($estado_formulario_mensual == 'sin_datos'): ?>
+                    <a class="nav-link disabled" href="#" onclick="return false;" 
+                    style="color: #6c757d; pointer-events: none; opacity: 0.65;">
+                        <i class="bi bi-clipboard-check me-2"></i>Capacitaciones, accidentes y auditorías
+                    </a>
+                    <a class="nav-link disabled" href="#" onclick="return false;" 
+                    style="color: #6c757d; pointer-events: none; opacity: 0.65;">
+                        <i class="bi bi-exclamation-triangle me-1"></i>Plan de Contingencias
+                    </a>
+                <?php elseif ($estado_formulario_accidentes == 'sin_datos'): ?>
+                    <a class="nav-link" href="reporte_adicional_view.php?id=<?= $generador_id ?>">
+                        <i class="bi bi-clipboard-check me-2"></i>Capacitaciones, accidentes y auditorías
+                    </a>
+                    <a class="nav-link disabled" href="#" onclick="return false;" 
+                    style="color: #6c757d; pointer-events: none; opacity: 0.65;">
+                        <i class="bi bi-exclamation-triangle me-1"></i>Plan de Contingencias
+                    </a>
                 <?php else: ?>
-                    <!-- Menú simplificado cuando no están todos completos -->
-                    <li class="breadcrumb-item active"><b><u>Reporte Mensual de Residuos</u></b></li>
-                    <?php if($estado_formulario_mensual=='pendiente'): ?>
-                        <li class="breadcrumb-item"><a href="reporte_adicional_view.php?id=<?= $generador_id ?>">Capacitaciones, accidentes y auditorías</a></li>
-                    <?php endif; ?>
-                    <?php if($estado_formulario_accidentes=='pendiente'): ?>
-                        <li class="breadcrumb-item"><a href="reporte_contingencias_view.php?id=<?= $generador_id ?>">Plan de contingencias</a></li>
-                    <?php endif; ?>    
+                     <a class="nav-link" href="reporte_adicional_view.php?id=<?= $generador_id ?>">
+                        <i class="bi bi-clipboard-check me-2"></i>Capacitaciones, accidentes y auditorías
+                    </a>
+                    <a class="nav-link" href="reporte_contingencias_view.php?id=<?= $generador_id ?>">
+                        <i class="bi bi-exclamation-triangle me-1"></i>Plan de Contingencias
+                    </a>
                 <?php endif; ?>
-            </ol>
+            </div>
         </nav>
+        
+        <!-- Mensaje informativo cuando las pestañas están deshabilitadas -->
+        <?php if ($estado_formulario_mensual == 'sin_datos'): ?>
+            <div class="alert alert-warning alert-dismissible fade show mb-4">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <strong>¡Atención!</strong>
+                <p class="mb-0 mt-2">
+                    Debe completar el <strong>Reporte Mensual de Residuos</strong> antes de acceder a los otros formularios.
+                </p>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="bi bi-clipboard-data me-2"></i>Reporte Mensual de Residuos</h2>
@@ -190,7 +213,7 @@ if(isset($contingencia) && is_array($contingencia) && isset($contingencia['estad
             <?php endif; ?>
 
             <a href="listado_generadores_view.php" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-arrow-left me-2"></i>Volver
+                <i class="bi bi-arrow-left me-2"></i>Mis Establecimientos
             </a>
         </div>
 

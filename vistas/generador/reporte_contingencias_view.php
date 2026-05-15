@@ -159,33 +159,28 @@ if($reporte_confirmado): ?>
     <!-- Contenedor principal -->
     <div class="container my-4">
         <!-- Breadcrumb -->
-        <nav aria-label="breadcrumb" class="mb-3">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="../dashboard.php">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="listado_generadores_view.php">Mis Establecimientos</a></li>   
-                    <!-- Menú completo activo cuando los tres formularios están llenos -->
-                    <li class="breadcrumb-item"><a href="reporte_mensual_view.php?id=<?= $generador_id ?>">Reporte Mensual de residuos</a></li>
-                    <li class="breadcrumb-item"><a href="reporte_adicional_view.php?id=<?= $generador_id ?>">Capacitaciones, accidentes y auditorías</a></li>
-                    <li class="breadcrumb-item active"><b><u>Plan de Contingencias</u></b></li>
-                
-            </ol>
+        <nav class="mb-3">
+            <div class="nav nav-tabs custom-tabs" role="tablist">                
+                <a class="nav-link" href="reporte_mensual_view.php?id=<?= $generador_id ?>">
+                    <i class="bi bi-clipboard-data me-1"></i>Reporte Mensual de residuos
+                </a>
+                <a class="nav-link" href="reporte_adicional_view.php?id=<?= $generador_id ?>">
+                    <i class="bi bi-clipboard-check me-1"></i>Capacitaciones, accidentes y auditorías
+                </a>
+                <a class="nav-link active" " href="#">
+                    <i class="bi bi-exclamation-triangle me-1"></i>Plan de Contingencias
+                </a>
+            </div>
         </nav>
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="bi bi-exclamation-triangle me-2"></i>Plan de Contingencias</h2>
-            <a href="reporte_adicional_view.php?id=<?= $generador_id ?>" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-arrow-left me-2"></i>Volver
+            <a href="listado_generadores_view.php" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Mis Establecimientos
             </a>
         </div>
 
-        <!-- Mensaje de confirmación del formulario anterior -->
-        <?php if ($estado_formulario_accidentes == 'pendiente' && $estado_formulario_contingencias == 'sin_datos'): ?>
-        <div class="alert alert-success mb-4">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            <strong>¡Datos guardados exitosamente!</strong> La información de capacitaciones, accidentes y auditorías ha sido guardada correctamente. 
-            Ahora complete el registro de contingencias relacionadas con la gestión de residuos.
-        </div>
-        <?php endif; ?>
+        
         <!-- Tarjeta informativa -->
         <div class="card mb-4" style="background-color: #f8f4ceff;">
             <div class="card-body">                
