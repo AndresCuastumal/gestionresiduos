@@ -223,9 +223,15 @@ class GeneradorController {
     }
 
     private function processForm() {
+        // LÍNEAS DE PRUEBA - INICIO
+        file_put_contents('/tmp/1_entra_processForm.txt', date('Y-m-d H:i:s') . " - Entró a processForm\n", FILE_APPEND);
+        // LÍNEAS DE PRUEBA - FIN
+
         if (!$this->verificarConexion()) return;
         
         try {
+            // LÍNEA DE PRUEBA
+            file_put_contents('/tmp/2_validacion.txt', date('Y-m-d H:i:s') . " - Pasó verificación\n", FILE_APPEND);
             // Validar campos requeridos
             $campos_requeridos = [
                 'periodo_reporte', 'nom_generador', 'nit', 
@@ -281,6 +287,9 @@ class GeneradorController {
                     $id_generador
                 ]);
 
+                // Después del execute() del INSERT o UPDATE
+                file_put_contents('/tmp/3_antes_header.txt', date('Y-m-d H:i:s') . " - ID: " . ($id_generador ?? 'N/A') . "\n", FILE_APPEND);
+                file_put_contents('/tmp/4_sesion_set.txt', date('Y-m-d H:i:s') . " - Sesión escrita\n", FILE_APPEND);
                 $_SESSION['mensaje_exito'] = "Generador actualizado exitosamente!";
                 
             } else {
