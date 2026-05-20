@@ -1,4 +1,14 @@
 <?php
+// TEMPORAL: Para depurar el envío del formulario
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    error_log("=== DATOS RECIBIDOS ===");
+    error_log(print_r($_POST, true));
+    error_log("=== FILES ===");
+    error_log(print_r($_FILES, true));
+    
+    // También guarda en un archivo para verlo fácilmente
+    file_put_contents('debug_form.txt', date('Y-m-d H:i:s') . "\n" . print_r($_POST, true) . "\n\n", FILE_APPEND);
+}
 session_start();
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
