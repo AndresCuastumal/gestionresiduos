@@ -736,12 +736,12 @@ if($reporte_confirmado): ?>
             </div>
         </div>
     </div>
-     <!-- Modal de Confirmación -->
-    <div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-labelledby="modalConfirmacionLabel" aria-hidden="true">
+        <!-- Modal de Confirmación de Envío (para el usuario que va a enviar) -->
+    <div class="modal fade" id="modalConfirmarEnvio" tabindex="-1" aria-labelledby="modalConfirmarEnvioLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalConfirmacionLabel"><i class="bi bi-exclamation-triangle text-warning me-2"></i>Confirmar Envío</h5>
+                    <h5 class="modal-title" id="modalConfirmarEnvioLabel"><i class="bi bi-exclamation-triangle text-warning me-2"></i>Confirmar Envío</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -754,7 +754,7 @@ if($reporte_confirmado): ?>
                         <li>No podrá realizar modificaciones a ninguno de los tres reportes</li>
                         <li>El técnico asignado revisará toda la información reportada</li>                        
                         <li>El estado cambiará a "Pendiente"</li>
-                        <li>Revise el sistema periódicamente para ver si hay correcciones por hacer o para descargar su certificado"</li>
+                        <li>Revise el sistema periódicamente para ver si hay correcciones por hacer o para descargar su certificado</li>
                     </ul>
                     <p>Si necesita realizar cambios posteriores, deberá contactar al administrador.</p>
                 </div>
@@ -768,7 +768,93 @@ if($reporte_confirmado): ?>
                 </div>
             </div>
         </div>
-    </div>                        
+    </div>
+
+    <!-- Modal de Éxito/Confirmación (se muestra después de enviar) -->
+    <?php if (isset($_SESSION['modal_tipo'])): ?>
+    <div class="modal fade" id="modalExito" tabindex="-1" aria-labelledby="modalExitoLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header <?= $_SESSION['modal_tipo'] == 'completado' ? 'bg-success' : 'bg-primary' ?> text-white">
+                    <h5 class="modal-title" id="modalExitoLabel">
+                        <i class="bi <?= $_SESSION['modal_tipo'] == 'completado' ? 'bi-trophy-fill' : 'bi-check-circle-fill' ?> me-2"></i>
+                        <?= htmlspecialchars($_SESSION['modal_titulo'] ?? 'Información Enviada') ?>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <?php if ($_SESSION['modal_tipo'] == 'completado'): ?>
+                            <i class="bi bi-trophy-fill text-success" style="font-size: 4rem;"></i>
+                        <?php else: ?>
+                            <i class="bi bi-send-check-fill text-primary" style="font-size: 4rem;"></i>
+                        <?php endif; ?>
+                    </div>
+                    <p class="text-center fs-5">
+                        <?= htmlspecialchars($_SESSION['modal_mensaje']) ?>
+                    </p>
+                    <hr>
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <small>
+                            <?php if ($_SESSION['modal_tipo'] == 'completado'): ?>
+                                El administrador revisará toda la información y se pondrá en contacto si requiere alguna aclaración.
+                            <?php else: ?>
+                                El administrador revisará la información y podrá solicitar correcciones si es necesario.
+                            <?php endif; ?>
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                        <i class="bi bi-check-lg me-2"></i>Aceptar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mostrar modal de éxito automáticamente al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            var modalExito = new bootstrap.Modal(document.getElementById('modalExito'));
+            modalExito.show();
+            
+            // Redirigir después de cerrar el modal si es necesario
+            document.getElementById('modalExito').addEventListener('hidden.bs.modal', function () {
+                <?php if ($_SESSION['modal_tipo'] == 'completado'): ?>
+                    // Redirigir al listado después de cerrar el modal
+                    window.location.href = 'listado_generadores_view.php';
+                <?php endif; ?>
+            });
+        });
+    </script>
+
+    <?php 
+    // Limpiar variables de sesión del modal para que no se muestre nuevamente
+    unset($_SESSION['modal_tipo']);
+    unset($_SESSION['modal_mensaje']);
+    unset($_SESSION['modal_titulo']);
+    endif; ?>
+
+    <script>
+        // Mostrar modal automáticamente al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            var modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
+            modal.show();
+            
+            // Redirigir después de cerrar el modal si es necesario
+            document.getElementById('modalConfirmacion').addEventListener('hidden.bs.modal', function () {
+                <?php if ($_SESSION['modal_tipo'] == 'completado'): ?>
+                    // Para completado, ya redirigimos desde PHP, pero si no funciona:
+                    // window.location.href = '../../vistas/generador/listado_generadores_view.php';
+                <?php endif; ?>
+            });
+        });
+    </script>
+
+    
+                          
     <script>
         // Funcionalidad para mostrar campos de texto cuando se selecciona "Otro"
         <?php if ($modo_edicion && !$reporte_confirmado): ?>
@@ -831,7 +917,7 @@ if($reporte_confirmado): ?>
         }
 
         function mostrarModalConfirmacion() {
-            var modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
+            var modal = new bootstrap.Modal(document.getElementById('modalConfirmarEnvio'));
             modal.show();
         }
 

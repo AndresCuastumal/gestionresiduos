@@ -487,5 +487,56 @@ function getIconoTooltip($tipo, $habilitado, $estado, $rechazados) {
     </div>
 </div>
 
-<!-- Modal y scripts igual... -->
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de eliminar este establecimiento?.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <a id="eliminarBtn" href="#" class="btn btn-outline-danger">Eliminar</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
 <?php include '../../includes/footer.php'; ?>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+function confirmarEliminacion(id) {
+    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    document.getElementById('eliminarBtn').href = `listado_generadores_view.php?eliminar=${id}`;
+    modal.show();
+}
+
+function mostrarAdvertenciaConfirmado() {
+    alert("Este establecimiento no se puede editar ni eliminar porque ya tiene un plan de contingencias confirmado.");
+}
+
+// Inicializar tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+});
+
+// Estilo para botón de corrección en tabla
+document.querySelectorAll('.btn-corregir-table').forEach(btn => {
+    btn.addEventListener('mouseenter', function() {
+        this.style.backgroundColor = '#fff3cd';
+        this.style.borderColor = '#ffc107';
+    });
+    btn.addEventListener('mouseleave', function() {
+        this.style.backgroundColor = '';
+        this.style.borderColor = '';
+    });
+});
+</script>

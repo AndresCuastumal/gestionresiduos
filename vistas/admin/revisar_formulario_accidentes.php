@@ -321,17 +321,7 @@ include '../../includes/header.php';
                                 </a>
                             </p>
                             <?php endif; ?>
-                        </div>
-                        <div class="col-md-6">
-                            <?php if ($datosReporte['archivo_plan_mejoramiento_externas']): ?>
-                            <p><strong>Plan de mejoramiento externo:</strong> 
-                                <a href="../../procesos/generador/soportes_generador/<?= $datosReporte['archivo_plan_mejoramiento_externas'] ?>" 
-                                   target="_blank" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-download me-2"></i>Ver archivo
-                                </a>
-                            </p>
-                            <?php endif; ?>
-                        </div>
+                        </div>                        
                     </div>
                 </div>
 

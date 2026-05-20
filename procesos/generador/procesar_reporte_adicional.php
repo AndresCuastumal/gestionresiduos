@@ -168,14 +168,7 @@ try {
         $anio, 
         'archivo_plan_mejoramiento_interno'
     );
-    $archivo_plan_mejoramiento_externas = procesarArchivo(
-        $_FILES['archivo_plan_mejoramiento_externas'], 
-        $directorio, 
-        'plan_mejoramiento_externas_', 
-        $generador_id, 
-        $anio, 
-        'archivo_plan_mejoramiento_externas'
-    );
+    
 
     
     
@@ -184,6 +177,9 @@ try {
     $acciones_json = !empty($acciones_preventivas) ? json_encode($acciones_preventivas) : '[]';
     
     $num_accidentes = isset($_POST['num_accidentes']) ? $_POST['num_accidentes'] : 0;
+    $num_auditorias_externas = isset($_POST['num_auditorias_externas']) && $_POST['num_auditorias_externas'] !== '' 
+    ? (int)$_POST['num_auditorias_externas'] 
+    : 0;
     $otra_accion_preventiva = isset($_POST['otra_accion_preventiva']) ? trim($_POST['otra_accion_preventiva']) : null;
     
     // Si se seleccionó "otra" pero no se especificó, mantener el valor existente
@@ -223,8 +219,7 @@ try {
                 archivo_resultados_auditorias_internas = ?,
                 archivo_plan_mejoramiento_interno = ?,
                 num_auditorias_externas = ?,
-                archivo_resultados_auditorias_externas = ?,
-                archivo_plan_mejoramiento_externas = ?,
+                archivo_resultados_auditorias_externas = ?,                
                 fecha_creacion = CURRENT_TIMESTAMP
                 WHERE generador_id = ? AND anio = ?");
             
@@ -241,9 +236,8 @@ try {
                 $_POST['num_auditorias_internas'],
                 $archivo_resultados_auditorias_internas,
                 $archivo_plan_mejoramiento_interno,
-                $_POST['num_auditorias_externas'],
-                $archivo_resultados_auditorias_externas,
-                $archivo_plan_mejoramiento_externas,
+                $num_auditorias_externas,
+                $archivo_resultados_auditorias_externas,                
                 $generador_id,
                 $anio
             ]);
@@ -260,8 +254,8 @@ try {
                  num_capacitaciones_ejecutadas, num_empleados_capacitados, archivo_soportes_capacitaciones,
                  tiene_accidentes, num_accidentes, acciones_preventivas, otra_accion_preventiva,
                  num_auditorias_internas, archivo_resultados_auditorias_internas, archivo_plan_mejoramiento_interno,
-                 num_auditorias_externas, archivo_resultados_auditorias_externas, archivo_plan_mejoramiento_externas)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                 num_auditorias_externas, archivo_resultados_auditorias_externas)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             
             $stmt->execute([
                 $generador_id, $anio,
@@ -277,9 +271,8 @@ try {
                 $_POST['num_auditorias_internas'],
                 $archivo_resultados_auditorias_internas,
                 $archivo_plan_mejoramiento_interno,
-                $_POST['num_auditorias_externas'],
-                $archivo_resultados_auditorias_externas,
-                $archivo_plan_mejoramiento_externas
+                $num_auditorias_externas,
+                $archivo_resultados_auditorias_externas                
             ]);
             
             $_SESSION['mensaje_exito'] = "¡Información adicional guardada! Complete ahora el plan de contingencias.";

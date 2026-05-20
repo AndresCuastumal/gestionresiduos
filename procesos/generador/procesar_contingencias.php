@@ -266,30 +266,9 @@ try {
         
         // Confirmar transacción
         $conn->commit();
-        // ✅ ENVIAR CORREO DE CONFIRMACIÓN AL USUARIO
-        if ($accion == 'confirmar') {
-            error_log("📧 ENVIANDO CORREO DE CONFIRMACIÓN AL USUARIO");
-            
-            try {
-                // Incluir y usar el controlador de email
-                require_once __DIR__ . '/../admin/email_controller.php';
-                $emailController = new EmailController($conn);
-                
-                // Enviar confirmación de recepción al usuario
-                $enviado = $emailController->enviarConfirmacionRecepcion($generador_id, $anio, $persona_reporta);
-                
-                if ($enviado) {
-                    error_log("✅ Correo de confirmación enviado exitosamente al usuario");
-                } else {
-                    error_log("⚠️ No se pudo enviar el correo de confirmación");
-                }
-                
-            } catch (Exception $e) {
-                error_log("❌ Error al enviar correo de confirmación: " . $e->getMessage());
-                // No interrumpir el flujo principal si falla el email
-            }
-        }
 
+        // ✅ ELIMINÉ EL ENVÍO DE CORREO - AHORA USAMOS MODAL
+        
         if ($accion == 'confirmar') {
             // Verificar si los tres formularios están completos
             $stmt_check_completos = $conn->prepare("
@@ -303,18 +282,21 @@ try {
             
             if ($formularios['tiene_mensual'] > 0 && $formularios['tiene_adicional'] > 0 && $formularios['tiene_contingencias'] > 0) {
                 // Los tres formularios están completos
-                $mensaje = "¡Los tres formularios han sido confirmados exitosamente! El reporte anual completo está pendiente de revisión.";
+                $_SESSION['modal_tipo'] = 'completado';
+                $_SESSION['modal_mensaje'] = "¡Felicidades! Has completado los tres formularios requeridos. El reporte anual completo está pendiente de revisión por parte del administrador.";
+                $_SESSION['modal_titulo'] = "¡Reporte Anual Completado!";
                 
                 // Limpiar sesión
                 unset($_SESSION['generador_id_reportando']);
                 unset($_SESSION['anio_reportando']);
                 
-                $_SESSION['mensaje_exito'] = $mensaje;
                 header("Location: ../../vistas/generador/listado_generadores_view.php");
                 exit();
             } else {
                 // Solo este formulario está confirmado
-                $_SESSION['mensaje_exito'] = "¡Plan de Contingencias confirmado exitosamente!";
+                $_SESSION['modal_tipo'] = 'confirmado';
+                $_SESSION['modal_mensaje'] = "El Plan de Contingencias ha sido enviado exitosamente para su revisión. El administrador evaluará la información proporcionada.";
+                $_SESSION['modal_titulo'] = "¡Información Enviada!";
                 header("Location: ../../vistas/generador/reporte_contingencias_view.php?id=" . $generador_id);
                 exit();
             }

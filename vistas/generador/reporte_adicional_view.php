@@ -534,27 +534,7 @@ if (!$reporte_bloqueado) {
                                     <span class="ms-2 text-muted">Si no selecciona un nuevo archivo, se mantendrá el actual.</span>
                                 </div>
                                 <?php endif; ?>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">
-                                    Acciones correctivas y de mejoramiento (PDF)
-                                    <?php if (!$info_adicional): ?><?php endif; ?>
-                                </label>
-                                <input type="file" class="form-control" 
-                                       name="archivo_plan_mejoramiento_externas" 
-                                       accept=".pdf" <?= !$info_adicional ? : '' ?> <?= $disabled ?>
-                                       <?= !$modo_edicion ? 'style="background-color: #f8f9fa; border-color: #dee2e6;"' : '' ?>>
-                                <div class="form-text">Plan de mejoramiento de auditoría(s) <strong>externa(s)</strong> para el año evaluado</div>
-                                <?php if ($info_adicional && !empty($info_adicional['archivo_plan_mejoramiento_externas'])): ?>
-                                <div class="form-text">
-                                    <a href="../../procesos/generador/soportes_generador/<?= $info_adicional['archivo_plan_mejoramiento_externas'] ?>" 
-                                       target="_blank" class="btn btn-sm btn-outline-primary mt-1">
-                                        <i class="bi bi-download me-1"></i>Ver PDF actual
-                                    </a>
-                                    <span class="ms-2 text-muted">Si no selecciona un nuevo archivo, se mantendrá el actual.</span>
-                                </div>
-                                <?php endif; ?>
-                            </div>
+                            </div>                            
                         </div>
                     </div>
                     
@@ -650,8 +630,7 @@ document.addEventListener('DOMContentLoaded', function() {
         { id: 'archivo_soportes_capacitaciones', name: 'Soportes de capacitaciones' },
         { id: 'archivo_resultados_auditorias_internas', name: 'Resultados de auditorías internas' },
         { id: 'archivo_resultados_auditorias_externas', name: 'Resultados de auditorías externas' },
-        { id: 'archivo_plan_mejoramiento_interno', name: 'Plan de mejoramiento interno' },
-        { id: 'archivo_plan_mejoramiento_externas', name: 'Plan de mejoramiento externo' }
+        { id: 'archivo_plan_mejoramiento_interno', name: 'Plan de mejoramiento interno' }
     ];
     
     // Crear mensajes de error para cada input
