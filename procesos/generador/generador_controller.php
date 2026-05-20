@@ -1,14 +1,20 @@
 <?php
-// TEMPORAL: Para depurar el envío del formulario
+// DEPURACIÓN TEMPORAL - Escribe en /tmp/
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    error_log("=== DATOS RECIBIDOS ===");
-    error_log(print_r($_POST, true));
-    error_log("=== FILES ===");
-    error_log(print_r($_FILES, true));
+    $debugData = "=== " . date('Y-m-d H:i:s') . " ===\n";
+    $debugData .= "POST:\n" . print_r($_POST, true) . "\n";
+    $debugData .= "FILES:\n" . print_r($_FILES, true) . "\n";
+    $debugData .= "SERVER:\n" . print_r($_SERVER, true) . "\n";
+    $debugData .= "========================\n\n";
     
-    // También guarda en un archivo para verlo fácilmente
-    file_put_contents('debug_form.txt', date('Y-m-d H:i:s') . "\n" . print_r($_POST, true) . "\n\n", FILE_APPEND);
+    // Escribir en /tmp/ (esto SIEMPRE funciona)
+    file_put_contents('/tmp/gestionresiduos_debug.txt', $debugData, FILE_APPEND);
+    
+    // También crear un archivo único por cada envío
+    $uniqueFile = '/tmp/gestionresiduos_form_' . date('Ymd_His') . '.txt';
+    file_put_contents($uniqueFile, $debugData);
 }
+
 session_start();
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
