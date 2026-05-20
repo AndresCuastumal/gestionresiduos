@@ -95,7 +95,7 @@ include '../../includes/header.php';
                     <?php unset($_SESSION['mensaje_exito']); ?>
                 <?php endif; ?>
 
-                <form method="POST" id="formGenerador">
+                <form method="POST" id="formGenerador" action="../../procesos/generador/generador_controller.php">
                     <!-- Campo oculto para ID si estamos editando -->
                     <?php if (isset($generadorExistente['id'])): ?>
                         <input type="hidden" name="id_generador" value="<?= htmlspecialchars($generadorExistente['id']) ?>">
