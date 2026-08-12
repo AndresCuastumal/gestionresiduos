@@ -35,6 +35,21 @@ $estadosRestrictivos = ['rechazado', 'aprobado'];
 
 // Determinar si el formulario debe estar bloqueado
 $formularioBloqueado = $estaFinalizado || in_array($estadoMensual, $estadosRestrictivos);
+$mensajeBloqueo = '';
+
+// ✅ NUEVA LÓGICA: Bloquear si está pendiente y la fecha límite pasó (20 de febrero)
+if ($estadoMensual === 'pendiente') {
+    $fechaLimite = date('Y-m-d', strtotime(date('Y') . '-02-20')); // 20 de febrero del año actual
+    $fechaActual = date('Y-m-d');
+    
+    // Si la fecha actual es mayor a la fecha límite (20 de febrero)
+    if ($fechaActual > $fechaLimite) {
+        $formularioBloqueado = true;
+        
+        // Opcional: Agregar mensaje informativo
+        $mensajeBloqueo = "Este formulario está bloqueado porque la fecha de máxima de revisión (20 de febrero) ha pasado.";
+    }
+}
 
 // ✅ NUEVO: Obtener información de intentos
 $infoIntentos = $revisionController->obtenerInfoIntentos($generador_id, $anio);
@@ -144,6 +159,7 @@ include '../../includes/header.php';
                     <div class="col-md-6">
                         <h6 class="text-muted">Detalles de la Revisión</h6>
                         <p><strong>Año:</strong> <?= $anio ?></p>
+                        <p><strong>Fecha límite de revisión:</strong> 20 de febrero de <?= $anio ?></p>
                         <p><strong>Estado del formulario:</strong> 
                             <?php
                             $clase_estado = '';
@@ -156,6 +172,9 @@ include '../../includes/header.php';
                             <span class="badge-estado <?= $clase_estado ?>">
                                 <?= ucfirst($revision['formulario_mensual']) ?>
                             </span>
+                            <?php if ($estadoMensual === 'pendiente' && $formularioBloqueado): ?>
+                                <span class="badge bg-warning text-dark ms-2">⏰ VENCIDO</span>
+                            <?php endif; ?>
                         </p>
                         <p><strong>Estado general:</strong>
                             <?php
@@ -184,7 +203,7 @@ include '../../includes/header.php';
                         
                         <?php if ($revision['fecha_revision']): ?>
                             <p><strong>Última revisión:</strong> <?= date('d/m/Y H:i', strtotime($revision['fecha_revision'])) ?></p>
-                            <p><strong>Por:</strong> <?= htmlspecialchars($revision['nombre_revisor']) ?></p>
+                            <p><strong>Por:</strong> <?= isset($revision['nombre_revisor']) ? htmlspecialchars($revision['nombre_revisor']) : 'No disponible' ?></p>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -245,7 +264,8 @@ include '../../includes/header.php';
                                         Esta revisión ya ha sido completada y no puede ser modificada.
                                     <?php else: ?>
                                         Este formulario ya tiene un estado definitivo (<?= ucfirst($estadoMensual) ?>) y no puede ser modificado.
-                                    <?php endif; ?>
+                                        <?= isset($mensajeBloqueo) ? ucfirst($mensajeBloqueo) : '' ?>
+                                        <?php endif; ?>
                                     <?php if ($estaFinalizado && $revision['estado_general'] === 'aprobado'): ?>
                                         El certificado fue enviado al generador.
                                     <?php elseif ($estaFinalizado): ?>

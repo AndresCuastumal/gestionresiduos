@@ -56,9 +56,18 @@ $estadosRestrictivos = ['rechazado', 'aprobado'];
 $formularioBloqueado = $estaFinalizado || 
                       in_array($estadoContingencias, $estadosRestrictivos) ||
                       !$tieneDatos;
+$mensajeBloqueo = '';
+
+if ($estadoContingencias === 'pendiente'){
+    $fechaLimite = new DateTime("$anio-02-20");
+    $hoy = new DateTime();
+    if ($hoy > $fechaLimite) {
+        $formularioBloqueado = true;
+        $mensajeBloqueo = "El plazo para revisar este formulario ha vencido (20 de febrero de $anio). No es posible realizar modificaciones.";
+    }
+}
 
 // ✅ NUEVO: Mensaje específico para cuando no hay datos
-$mensajeBloqueo = '';
 if (!$tieneDatos) {
     $mensajeBloqueo = "No hay datos diligenciados en el plan de contingencias. No es posible realizar una revisión hasta que el generador complete la información.";
 } elseif ($estaFinalizado) {
@@ -195,6 +204,7 @@ include '../../includes/header.php';
                 <div class="col-md-6">
                     <h6 class="text-muted">Detalles de la Revisión</h6>
                     <p><strong>Año:</strong> <?= $anio ?></p>
+                    <p><strong>Fecha límite de revisión:</strong> 20 de febrero de <?= $anio ?></p>
                     <p><strong>Estado  del formulario:</strong> 
                         <?php
                         $clase_estado = '';
@@ -209,6 +219,9 @@ include '../../includes/header.php';
                         <span class="badge-estado <?= $clase_estado ?>">
                             <?= ucfirst($revision['formulario_contingencias'] ?? 'sin_datos') ?>
                         </span>
+                        <?php if($estadoContingencias === 'pendiente' && $formularioBloqueado): ?>
+                            <span class="badge bg-warning ms-2">⏰ VENCIDO</span>
+                        <?php endif; ?>
                     </p>
                     <p><strong>Estado general:</strong>
                         <?php
@@ -235,7 +248,7 @@ include '../../includes/header.php';
                 
                     <?php if ($revision['fecha_revision']): ?>
                         <p><strong>Última revisión:</strong> <?= date('d/m/Y H:i', strtotime($revision['fecha_revision'])) ?></p>
-                        <p><strong>Por:</strong> <?= htmlspecialchars($revision['nombre_revisor']) ?></p>                            
+                        <p><strong>Por:</strong> <?= isset($revision['nombre_revisor']) ? htmlspecialchars($revision['nombre_revisor']) : 'No disponible' ?></p>                            
                     <?php endif; ?>
                 </div>
             </div>

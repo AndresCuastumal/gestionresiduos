@@ -43,12 +43,20 @@ $estadosRestrictivos = ['rechazado', 'aprobado'];
 // 1) Está finalizado 
 // 2) Este formulario específico ya fue revisado (aprobado/rechazado)
 // 3) NO hay datos diligenciados
-$formularioBloqueado = $estaFinalizado || 
-                      in_array($estadoAccidentes, $estadosRestrictivos) ||
-                      !$tieneDatos; // ✅ NUEVO: Bloquear si no hay datos
+$formularioBloqueado = $estaFinalizado || in_array($estadoAccidentes, $estadosRestrictivos) || !$tieneDatos; // ✅ NUEVO: Bloquear si no hay datos
+$mensajeBloqueo = '';
+//Bloquear si estado está pendiente y la fecha limite ya pasó (20 de febrero de cada año)
+if ($estadoAccidentes === 'pendiente') {
+    $fechaLimite = new DateTime("$anio-02-20");
+    $hoy = new DateTime();
+    if ($hoy > $fechaLimite) {
+        $formularioBloqueado = true;
+        $mensajeBloqueo = "La fecha límite para la revisión de este formulario ha pasado. No es posible realizar modificaciones.";
+    }
+}
 
 // ✅ NUEVO: Mensaje específico para cuando no hay datos
-$mensajeBloqueo = '';
+
 if (!$tieneDatos) {
     $mensajeBloqueo = "No hay datos diligenciados en este formulario. No es posible realizar una revisión hasta que el generador complete la información.";
 } elseif ($estaFinalizado) {
@@ -175,6 +183,7 @@ include '../../includes/header.php';
                 <div class="col-md-6">
                     <h6 class="text-muted">Detalles de la Revisión</h6>
                     <p><strong>Año:</strong> <?= $anio ?></p>
+                    <p><strong>Fecha límite de revisión:</strong> 20 de febrero de <?= $anio ?></p>
                     <p><strong>Estado  del formulario:</strong> 
                         <?php
                         $clase_estado = '';
@@ -189,6 +198,9 @@ include '../../includes/header.php';
                         <span class="badge-estado <?= $clase_estado ?>">
                             <?= ucfirst($revision['formulario_accidentes'] ?? 'sin_datos') ?>
                         </span>
+                        <?php if($estadoAccidentes === 'pendiente' && $formularioBloqueado): ?>
+                            <span class="badge bg-warning ms-2">⏰ VENCIDO</span>
+                        <?php endif; ?>
                     </p>                        
                     <p><strong>Estado general:</strong>
                         <?php
@@ -215,7 +227,7 @@ include '../../includes/header.php';
                     
                     <?php if ($revision['fecha_revision']): ?>
                         <p><strong>Última revisión:</strong> <?= date('d/m/Y H:i', strtotime($revision['fecha_revision'])) ?></p>
-                        <p><strong>Por:</strong> <?= htmlspecialchars($revision['nombre_revisor']) ?></p>                            
+                        <p><strong>Por:</strong> <?= isset($revision['nombre_revisor']) ? htmlspecialchars($revision['nombre_revisor']) : 'No disponible' ?></p>                            
                     <?php endif; ?>
 
                 </div>
