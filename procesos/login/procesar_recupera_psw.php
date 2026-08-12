@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt->execute();
             
             // Configurar y enviar el correo
-            $enlace = "http://34.56.4.161/gestionresiduos/vistas/login/reset.php?token=$token";
+            $enlace = "http://34.28.241.42/gestionresiduos/vistas/login/reset.php?token=$token";
             
             $mail = configurarMailer(); // Función definida en mailer.php
             $mail->addAddress($email);

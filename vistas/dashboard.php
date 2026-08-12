@@ -25,10 +25,10 @@ include '../includes/header.php'; // Incluye el encabezado HTML
                 </p>
                 <ul class="list-group list-group-flush mt-4">
                     <li class="list-group-item border-0" style="background-color: #ebe5af75;">
-                        <i class="bi bi-file-earmark-spreadsheet me-2" style="color: #d97706;"></i>Reporte mensual de residuos generados en atención en salud
+                        <i class="bi bi-clipboard-data me-1" style="color: #d49f0d;"></i>Reporte mensual de residuos generados en atención en salud
                     </li>
                     <li class="list-group-item border-0" style="background-color: #f8f4ceff;">
-                        <i class="bi bi-mortarboard me-2" style="color: #059669;"></i>Capacitaciones, accidentes y auditorías realizadas
+                        <i class="bi bi-clipboard-check me-1" style="color: #10b981;"></i>Capacitaciones, accidentes y auditorías realizadas
                     </li>
                     <li class="list-group-item border-0" style="background-color: #ebe5af75;">
                         <i class="bi bi-exclamation-triangle me-2" style="color: #dc2626;"></i>Contingencias
@@ -45,7 +45,7 @@ include '../includes/header.php'; // Incluye el encabezado HTML
                         <i class="bi bi-calendar-check text-primary fs-1"></i>
                         <h5 class="card-title">Reporte Año <?= date('Y', strtotime('-1 year') ) ?></h5>
                         <p class="card-text">Módulo para reportar información relacionada con gestión de residuos generados en atención en salud y otras activiades para el año <?= date('Y', strtotime('-1 year') ) ?>.</p>
-                        <?php if (in_array($rol, ['generador']) && $fecha_actual >= $fecha_limite):  ?>
+                        <?php if (in_array($rol, ['generador']) && $fecha_actual <= $fecha_limite):  ?>
                             <a href="generador/reporte_mensual_view.php" class="btn btn-sm btn-outline-primary mt-2">Acceder</a>
                         <?php endif; ?>
                     </div>
