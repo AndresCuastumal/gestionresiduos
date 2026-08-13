@@ -170,8 +170,12 @@ include '../../includes/header.php';
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2><i class="bi bi-shield-exclamation me-2"></i>Revisión - Plan de Contingencias</h2>
-        <a href="listado_revisiones_view.php" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-arrow-left me-2"></i>Lista de Establecimientos
+        <a href="listado_revisiones_view.php?<?= http_build_query([
+            'tipo_sujeto' => $_GET['tipo_sujeto'] ?? '',
+            'estado_general' => $_GET['estado_general'] ?? '',
+            'pagina' => $_GET['pagina'] ?? 1
+        ]) ?>" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Volver a la lista
         </a>
     </div>
 

@@ -43,8 +43,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             exit();
         }
     } catch (Exception $e) {
-        header("Location: ../../vistas/login/recuperar.php?error=Ocurrió un error inesperado.");
-        exit();
+        // === TEMPORAL: Mostrar error real ===
+    die("<h3>ERROR EN RECUPERACIÓN:</h3>
+         <p><strong>" . $e->getMessage() . "</strong></p>
+         <p>Archivo: " . $e->getFile() . " línea " . $e->getLine() . "</p>
+         <pre>" . $e->getTraceAsString() . "</pre>
+         <a href='javascript:history.back()'>Volver</a>");
+    
+    // Original (comentado)
+    // header("Location: ../../vistas/login/recuperar.php?error=Ocurrió un error inesperado.");
+    // exit();
     }
 } else {
     header("Location: ../../vistas/login/recuperar.php");

@@ -11,13 +11,13 @@ function configurarMailer() {
     $mail->isSMTP();
     $mail->Host = 'smtp.gmail.com';
     $mail->SMTPAuth = true;
-    $mail->Username = 'gestionresiduossms@gmail.com';
-    $mail->Password = 'qvkk yjcv gktx alvb';
+    $mail->Username = 'gresiduossms@gmail.com';
+    $mail->Password = 'axse gspv itdl pjop';
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Port = 587;
     
     // CORREGIR: Usar el mismo email de autenticación como remitente
-    $mail->setFrom('gestionresiduossms@gmail.com', 'Reporte de Gestión de Residuos - Secretaría de Salud Pasto');
+    $mail->setFrom('gresiduossms@gmail.com', 'Reporte de Gestión de Residuos - Secretaría de Salud Pasto');
     $mail->addCustomHeader('Precedence', 'bulk');
     $mail->addCustomHeader('X-Entity-Ref-ID', uniqid());
     // Opcional: Agregar reply-to si quieres otra dirección
