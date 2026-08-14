@@ -254,6 +254,14 @@ include '../../includes/header.php';
                                    title="Contingencias - <?= ucfirst(obtenerTextoEstado($revision['formulario_contingencias'])) ?>">
                                     <i class="bi bi-shield-exclamation fs-5 <?= obtenerClaseColor($revision['formulario_contingencias']) ?>"></i>
                                 </a>
+                                <!-- si el estado general es aprobado, mostrar un ícono para ver el certificado en pdf -->
+                                <?php if ($estado_general === 'aprobado'): ?>
+                                    <a href="../../procesos/admin/certificados/certificado_aprobacion_<?= $revision['generador_id'] ?>_<?= $revision['anio'] ?>.pdf" 
+                                       class="btn btn-sm btn-link text-decoration-none p-1" 
+                                       title="Ver Certificado PDF">
+                                        <i class="bi bi-file-earmark-pdf fs-5 text-warning"></i>
+                                    </a>
+                                <?php endif; ?>
                             </div>
                          </td>
                          <td>
