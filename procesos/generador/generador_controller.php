@@ -292,7 +292,7 @@ class GeneradorController {
                 $_SESSION['mensaje_exito'] = "Generador registrado exitosamente!";
             }
 
-            header("Location: /gestionresiduos/vistas/generador/listado_generadores_view.php");
+            header("Location: /vistas/generador/listado_generadores_view.php");
             exit();
 
         } catch (PDOException $e) {

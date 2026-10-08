@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt->execute();
         
         // 4. Configurar el correo (PERO NO ENVIARLO DIRECTAMENTE)
-        $enlace = "http://34.56.157.229/gestionresiduos/vistas/login/completar_registro.php?token=$token";
+        $enlace = "http://44.205.21.161/vistas/login/completar_registro.php?token=$token";
         
         $asunto = 'Verifica tu correo electrónico - Sistema de Gestión de Residuos';
         

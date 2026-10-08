@@ -576,7 +576,7 @@ class EmailController {
                     </ol>
                     
                     <p style='text-align: center;'>
-                        <a href='http://34.56.157.229/gestionresiduos' class='btn'>
+                        <a href='http://44.205.21.161' class='btn'>
                             📊 Ingresar al Sistema
                         </a>
                     </p>
@@ -676,7 +676,7 @@ class EmailController {
         3. Realice las correcciones necesarias
         4. Vuelva a enviar el reporte
 
-        Enlace al sistema: http://34.56.157.229/gestionresiduos/
+        Enlace al sistema: http://44.205.21.161/
 
         Secretaría de Salud de Pasto
         Sistema de Gestión de Residuos Peligrosos

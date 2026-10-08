@@ -10,11 +10,11 @@
         </footer>
 
         <!-- Scripts globales -->
-        <script src="/gestionresiduos/assets/js/main.js"></script>
+        <script src="/assets/js/main.js"></script>
         
         <!-- Script específico para la página -->
         <?php if (isset($page_script)): ?>
-            <script src="/gestionresiduos/assets/js/<?php echo $page_script; ?>"></script>
+            <script src="/assets/js/<?php echo $page_script; ?>"></script>
         <?php endif; ?>
     </body>
 </html>

@@ -116,7 +116,7 @@ class CertificadoPdfController {
         $responsable = htmlspecialchars($generador['nom_responsable'] ?? '');
         
         // Obtener la imagen en base64
-        $logoPath = $_SERVER['DOCUMENT_ROOT'] . '/gestionresiduos/assets/css/logoNuevoSMS2024.png';
+        $logoPath = $_SERVER['DOCUMENT_ROOT'] . '/assets/css/logoNuevoSMS2024.png';
         
         if (file_exists($logoPath)) {
             $logoData = base64_encode(file_get_contents($logoPath));

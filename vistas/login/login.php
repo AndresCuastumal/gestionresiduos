@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </div>
 </main>
 <div class="tauth-card shadow p-4 mb-5 mt-5 text-center">    
-    <a href="/gestionresiduos/includes/InstructivoGestionResiduos_v1.pdf" target="_blank" class="btn btn-info">Ver Instructivo del Aplicativo</a>
+    <a href="/includes/InstructivoGestionResiduos_v1.pdf" target="_blank" class="btn btn-info">Ver Instructivo del Aplicativo</a>
 </div>
 
 <?php include '../../includes/footer.php'; ?>

@@ -13,7 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">    
 
     <!-- Custom Styles -->
-    <link rel="stylesheet" href="/gestionresiduos/assets/css/estilos_simples.css">
+    <link rel="stylesheet" href="/assets/css/estilos_simples.css">
 </head>
 <body>
     <div class="container">
@@ -21,10 +21,10 @@
             <div style="background-color: #eed296ff;" class="p-4">
                 <div class="d-flex flex-column flex-md-row align-items-center justify-content-between mb-4">
                     <div class="d-flex align-items-center mb-3 mb-md-0">
-                        <img src="/gestionresiduos/assets/css/logoNuevoSMS2024.png" alt="Logo SMS" 
+                        <img src="/assets/css/logoNuevoSMS2024.png" alt="Logo SMS" 
                             class="me-3 img-fluid d-none d-md-block" 
                             style="max-height: 100px; width: auto;">
-                        <img src="/gestionresiduos/assets/css/logoNuevoSMS2024.png" alt="Logo SMS" 
+                        <img src="/assets/css/logoNuevoSMS2024.png" alt="Logo SMS" 
                             class="me-2 img-fluid d-md-none" 
                             style="max-height: 40px; width: auto;">
                         <h1 class="h3 mb-0 text-center">Reporte de Gestión Integral de Residuos Generados en la Atención en Salud y Otras Actividades</h1>
@@ -34,7 +34,7 @@
                         <span class="navbar-text me-3 d-none d-md-inline">
                             <?php echo $_SESSION['usuario_email']; ?>
                         </span>
-                        <a href="/gestionresiduos/logout.php" class="btn btn-sm btn-outline-secondary">
+                        <a href="/logout.php" class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-door-open me-1"></i> Cerrar Sesión
                         </a>
                     </div>
