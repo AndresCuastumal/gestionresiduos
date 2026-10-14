@@ -59,8 +59,8 @@ $formularioBloqueado = $estaFinalizado ||
 $mensajeBloqueo = '';
 
 if ($estadoContingencias === 'pendiente'){
-    $fechaLimite = new DateTime("$anio-02-20");
-    $hoy = new DateTime();
+    $fechaLimite = date('Y-m-d', strtotime(date('Y') . '-10-20'));
+    $hoy = date('Y-m-d');
     if ($hoy > $fechaLimite) {
         $formularioBloqueado = true;
         $mensajeBloqueo = "El plazo para revisar este formulario ha vencido (20 de febrero de $anio). No es posible realizar modificaciones.";

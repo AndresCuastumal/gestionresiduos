@@ -10,7 +10,7 @@ if (!isset($_SESSION['usuario_id'])) {
 
 // Obtener rol del usuario para permisos
 $rol = $_SESSION['usuario_rol'];
-$fecha_limite = strtotime('2026-02-23');
+$fecha_limite = strtotime('2026-10-23');
 $fecha_actual = time();
 include '../includes/header.php'; // Incluye el encabezado HTML
 ?>
