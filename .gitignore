@@ -7,3 +7,9 @@ debug.log
 .env.*.local
 /vendor/
 *.sql.original
+# Archivos generados por la app
+/procesos/admin/certificados/*.pdf
+/procesos/admin/certificados/*.html
+/procesos/generador/soportes_generador/*.pdf
+/backup_*.sql
+/dump_*.sql
