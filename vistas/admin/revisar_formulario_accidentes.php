@@ -47,7 +47,7 @@ $formularioBloqueado = $estaFinalizado || in_array($estadoAccidentes, $estadosRe
 $mensajeBloqueo = '';
 //Bloquear si estado está pendiente y la fecha limite ya pasó (20 de febrero de cada año)
 if ($estadoAccidentes === 'pendiente') {
-    $fechaLimite = date('Y-m-d', strtotime(date('Y') . '-10-20'));
+    $fechaLimite = date('Y-m-d', strtotime(date('Y') . '-02-20'));
     $hoy = date('Y-m-d');
     if ($hoy > $fechaLimite) {
         $formularioBloqueado = true;

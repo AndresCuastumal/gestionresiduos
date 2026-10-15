@@ -59,7 +59,7 @@ $formularioBloqueado = $estaFinalizado ||
 $mensajeBloqueo = '';
 
 if ($estadoContingencias === 'pendiente'){
-    $fechaLimite = date('Y-m-d', strtotime(date('Y') . '-10-20'));
+    $fechaLimite = date('Y-m-d', strtotime(date('Y') . '-02-20'));
     $hoy = date('Y-m-d');
     if ($hoy > $fechaLimite) {
         $formularioBloqueado = true;

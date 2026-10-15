@@ -39,7 +39,7 @@ $mensajeBloqueo = '';
 
 // ✅ NUEVA LÓGICA: Bloquear si está pendiente y la fecha límite pasó (20 de febrero)
 if ($estadoMensual === 'pendiente') {
-    $fechaLimite = date('Y-m-d', strtotime(date('Y') . '-10-20')); // 20 de febrero del año actual
+    $fechaLimite = date('Y-m-d', strtotime(date('Y') . '-02-20')); // 20 de febrero del año actual
     $fechaActual = date('Y-m-d');
     
     // Si la fecha actual es mayor a la fecha límite (20 de febrero)
